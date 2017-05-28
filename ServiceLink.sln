@@ -3,8 +3,32 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26430.6
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{AE05B580-F522-436A-8E0E-B6A84CA9FC6A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceLink", "src\ServiceLink\ServiceLink.csproj", "{B4812568-273E-44BF-803C-23360D759184}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceLink.RabbitMq", "src\ServiceLink.RabbitMq\ServiceLink.RabbitMq.csproj", "{EE522141-8C34-46E0-ABD8-8B045332A2B6}"
+EndProject
 Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B4812568-273E-44BF-803C-23360D759184}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B4812568-273E-44BF-803C-23360D759184}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B4812568-273E-44BF-803C-23360D759184}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B4812568-273E-44BF-803C-23360D759184}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EE522141-8C34-46E0-ABD8-8B045332A2B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE522141-8C34-46E0-ABD8-8B045332A2B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE522141-8C34-46E0-ABD8-8B045332A2B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE522141-8C34-46E0-ABD8-8B045332A2B6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{B4812568-273E-44BF-803C-23360D759184} = {AE05B580-F522-436A-8E0E-B6A84CA9FC6A}
+		{EE522141-8C34-46E0-ABD8-8B045332A2B6} = {AE05B580-F522-436A-8E0E-B6A84CA9FC6A}
 	EndGlobalSection
 EndGlobal
