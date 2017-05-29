@@ -6,12 +6,14 @@ namespace ServiceLink
 {
     public static class ServiceCollectionExtensions
     {
-        public static IServiceCollection UseServiceLink(this IServiceCollection collection)
+        public static IServiceCollection UseServiceLink<TSerializer, TDeserializer>(this IServiceCollection collection)
+            where TSerializer : IBusSerializer
+            where TDeserializer : IBusDeserializer
         {
             collection.AddTransient(typeof(Scoped<>));
-            collection.AddSingleton<Publisher, Publisher>();
-            collection.AddSingleton<IPublisher>(c => c.GetService<Publisher>());
-            collection.AddSingleton<IWorker>(c => c.GetService<Publisher>());
+            collection.AddSingleton<Publisher<TSerializer,TDeserializer>, Publisher<TSerializer, TDeserializer>>();
+            collection.AddSingleton<IPublisher>(c => c.GetService<Publisher<TSerializer, TDeserializer>>());
+            collection.AddSingleton<IWorker>(c => c.GetService<Publisher<TSerializer, TDeserializer>>());
             collection.AddSingleton<IBusContractResolver>(_ => new AttributeContractResolver());
             return collection;
         }
