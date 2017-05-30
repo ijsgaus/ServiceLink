@@ -15,7 +15,7 @@ namespace ServiceLink.RabbitMq
         }
 
         public IProducer GetTopology<T>(T message)
-            => _rules.Select(p => p.GetProducer(message?.GetType() ?? typeof(T), message)).FirstOrDefault();
+            => _rules.Select(p => p.GetProducer(message?.GetType() ?? typeof(T), message)).FirstOrDefault(p => p != null);
     }
 
     public interface IProducerResoveRule

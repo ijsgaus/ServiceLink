@@ -1,7 +1,11 @@
-﻿namespace ServiceLink.Bus
+﻿using System;
+using System.Threading.Tasks;
+
+namespace ServiceLink.Bus
 {
     public interface IBusContractResolver
     {
-        string GetContract<T>(T value);
+        IPreparedContract PrepareContract(Type type, object value);
+        IContractExtractor GetExtractor(string contract);
     }
 }

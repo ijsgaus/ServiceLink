@@ -1,7 +1,9 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using ServiceLink.Bus;
 using ServiceLink.Exceptions;
+using ServiceLink.Monads;
 
 namespace ServiceLink.RabbitMq
 {
@@ -15,15 +17,13 @@ namespace ServiceLink.RabbitMq
             _resolver = resolver;
         }
 
-        public Task Publish(T message, CancellationToken? token = null)
+        public Func<CancellationToken, Task> PreparePublish(T message)
         {
             var producer = _resolver.GetTopology(message);
             if (producer == null)
                 throw new ServiceLinkException($"Producer for {message} not detected");
-            var serialized = producer.GetSerializer().Serialize(message);
-            if (serialized == null)
-                throw new ServiceLinkException($"Cannot serialize message {message}");
-            return producer.GetProducer().Publish(serialized);
+            var serialized = producer.GetSerializer().Serialize(message).Unwrap();
+            return producer.GetProducer().PreparePublish(serialized);
         }
     }
 }

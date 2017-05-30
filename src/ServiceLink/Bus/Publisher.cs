@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ServiceLink.Exceptions;
+using ServiceLink.Monads;
 
 namespace ServiceLink.Bus
 {
@@ -26,7 +27,7 @@ namespace ServiceLink.Bus
         private readonly IDisposable _stopper;
 
         public Publisher(ILogger<Publisher<TSerializer, TDeserializer>> logger, 
-            IServiceProvider provider, IEnumerable<IPublishSafePoint> safePoints)
+            IServiceProvider provider, IEnumerable<IPublishSafeStore> safePoints)
         {
             _logger = logger;
             _provider = provider;
@@ -41,54 +42,53 @@ namespace ServiceLink.Bus
             _logger.LogTrace("Publishing message {@message}", message);
             var publisher = _provider.GetRequiredService<IPublisher<T>>();
             _logger.LogTrace($"Publishing with {publisher}");
-            var task = publisher.Publish(message, token);
+            var task = publisher.PreparePublish(message)(token ?? CancellationToken.None);
             task.ContinueWith(_ => _logger.LogTrace("Published message {@message}", message),
                 TaskContinuationOptions.OnlyOnRanToCompletion);
             task.ContinueWith(t => _logger.LogError(0, t.Exception, "On publishing {message}", message), TaskContinuationOptions.OnlyOnFaulted);
             return task;
         }
 
-        public void PublishSafe<T>(T message, IPublishSafePoint safer)
+        public Action PublishSafe<T>(T message, IPublishSafePoint safer)
         {
             if(_serializer == null)
                 throw new ServiceLinkException("Safe publishing is not properly configured - no serializer provided");
             if (safer == null) throw new ArgumentNullException(nameof(safer));
             _logger.LogTrace("Safe publishing message {@message}", message);
             
-            var serialized = _serializer.Serialize(message);
-            if(serialized == null)
-                throw new ServiceLinkException($"Cannot serialize {message} with type {message?.GetType() ?? typeof(T)}");
-            var tag = safer.SavePublishing(serialized);
-            Helper.Publish(_logger, _provider, safer, message, tag);
+            var serialized = _serializer.Serialize(message).Unwrap();
+            var lease = safer.SavePublishing(serialized);
+            return Helper.Prepare(_logger, _provider, lease, message);
         }
 
         
 
-        private IDisposable RunRepublishing(IEnumerable<IPublishSafePoint> points)
+        private IDisposable RunRepublishing(IEnumerable<IPublishSafeStore> points)
         {
-            var genericMethod = typeof(Helper).GetMethods().First(p => p.Name == nameof(Helper.Publish));
+            var genericMethod = typeof(Helper).GetMethods().First(p => p.Name == nameof(Helper.Prepare));
             return new CompositeDisposable(
                 points.Select(point =>
                     Observable
-                        .Interval(point.LeaseInterval)
+                        .Interval(point.CheckInterval)
                         .Subscribe(_ =>
                         {
                             while (true)
                             {
-                                var (serialized, tag) = point.GetAwaited();
+                                var (serialized, lease) = point.GetAwaited();
                                 if (serialized == null) break;
                                 try
                                 {
-                                    var (type, msg) = _deserializer.Deserialize(serialized);
+                                    var (type, msg) = _deserializer.Deserialize(serialized).Unwrap();
                                     if(type == null)
-                                        throw new ServiceLinkException($"Cannot deserialize message {serialized.Type} {serialized.ContentType} {tag}");
+                                        throw new ServiceLinkException($"Cannot deserialize message {serialized.Type} {serialized.ContentType}");
                                     var method = genericMethod.MakeGenericMethod(type);
-                                    method.Invoke(null, new[] {_logger, _provider, point, msg, tag});
-
+                                    var run = (Action) method.Invoke(null, new[] {_logger, _provider, lease, msg});
+                                    run();
                                 }
                                 catch (Exception ex)
                                 {
                                     _logger.LogError(0, ex, $"When republishing {point.GetType()}");
+                                    lease.Dispose();
                                 }
                             }
                         })));
@@ -101,19 +101,32 @@ namespace ServiceLink.Bus
 
         private class Helper
         {
-            public static void Publish<T>(ILogger logger, IServiceProvider provider, IPublishSafePoint safer, T message, object tag)
+            public static Action Prepare<T>(ILogger logger, IServiceProvider provider, ILease lease, T message)
             {
                 var publisher = provider.GetRequiredService<IPublisher<T>>();
 
                 logger.LogTrace($"Publisher used {publisher}");
-                var publish = publisher.Publish(message, CancellationToken.None).ToObservable();
-                var releaser = Observable.Interval(safer.LeaseInterval).Select(_ => Unit.Default);
-                releaser.TakeUntil(publish).Subscribe(_ => safer.ProlongateLease(tag));
-                publish.Subscribe(_ =>
+                var publishing = publisher.PreparePublish(message);
+                return () =>
                 {
-                    safer.Complete(tag);
-                    logger.LogTrace("Published {message}", message);
-                });
+                    var tokenSource = new CancellationTokenSource();
+                    var publish = publishing(tokenSource.Token).ToObservable();
+                    var releaser = Observable.Interval(lease.LeaseInterval).Select(_ => Unit.Default);
+                    releaser.TakeUntil(publish).Subscribe(_ =>
+                    {
+                        if (!lease.Renew())
+                        {
+                            tokenSource.Cancel();
+                            tokenSource.Dispose();
+                            lease.Dispose();
+                        }
+                    });
+                    publish.Subscribe(_ =>
+                    {
+                        lease.Dispose();
+                        logger.LogTrace("Published {message}", message);
+                    }, ex => logger.LogError(0, ex, "Publishing {message}", message));
+                };
             }
         }
     }

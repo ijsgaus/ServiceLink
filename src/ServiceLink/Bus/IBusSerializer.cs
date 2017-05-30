@@ -1,10 +1,11 @@
 ﻿using System.Threading.Tasks;
+using ServiceLink.Monads;
 
 namespace ServiceLink.Bus
 {
     public interface IBusSerializer
     {
-        SerializedMessage Serialize<T>(T data);
+        Result<SerializedMessage> Serialize<T>(T data);
         
     }
 }

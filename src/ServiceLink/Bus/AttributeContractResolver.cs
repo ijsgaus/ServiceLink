@@ -6,6 +6,7 @@ using ServiceLink.Exceptions;
 
 namespace ServiceLink.Bus
 {
+    /*
     public class AttributeContractResolver : IBusContractResolver
     {
         private readonly IBusContractResolver _fallBack;
@@ -33,4 +34,5 @@ namespace ServiceLink.Bus
                    );
         }
     }
+    */
 }

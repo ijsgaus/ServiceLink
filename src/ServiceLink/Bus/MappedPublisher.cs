@@ -15,7 +15,8 @@ namespace ServiceLink.Bus
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
-        public Task Publish(TSource message, CancellationToken? token = null)
-            => _targetPublisher.Publish(_mapper(message), token);
+        public Func<CancellationToken, Task> PreparePublish(TSource message)
+            => _targetPublisher.PreparePublish(_mapper(message));
+            
     }
 }

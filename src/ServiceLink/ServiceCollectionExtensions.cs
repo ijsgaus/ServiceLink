@@ -14,7 +14,7 @@ namespace ServiceLink
             collection.AddSingleton<Publisher<TSerializer,TDeserializer>, Publisher<TSerializer, TDeserializer>>();
             collection.AddSingleton<IPublisher>(c => c.GetService<Publisher<TSerializer, TDeserializer>>());
             collection.AddSingleton<IWorker>(c => c.GetService<Publisher<TSerializer, TDeserializer>>());
-            collection.AddSingleton<IBusContractResolver>(_ => new AttributeContractResolver());
+            //collection.AddSingleton<IBusContractResolver>(_ => new AttributeContractResolver());
             return collection;
         }
 

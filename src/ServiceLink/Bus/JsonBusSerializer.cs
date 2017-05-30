@@ -1,6 +1,8 @@
 ﻿using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using ServiceLink.Exceptions;
+using ServiceLink.Monads;
 
 namespace ServiceLink.Bus
 {
@@ -30,12 +32,13 @@ namespace ServiceLink.Bus
             _contractResolver = contractResolver;
         }
 
-        public SerializedMessage Serialize<T>(T data)
+        public Result<SerializedMessage> Serialize<T>(T data)
         {
-            var contract = _contractResolver.GetContract(data);
-            if (contract == null) return null;
-            return new SerializedMessage(contract, "text/json;encoding=utf8", 
-                Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(data, _settings)));
+            var type = data?.GetType() ?? typeof(T);
+            var contract = _contractResolver.PrepareContract(type, data);
+            if (contract == null) return new MissedContractException($"Contract for {type} {data} not found").ToError<SerializedMessage>();
+            return new SerializedMessage(contract.Code, "text/json;encoding=utf8", 
+                Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(contract.Body, contract.BodyType, _settings))).ToSuccess();
         }
     }
 }
