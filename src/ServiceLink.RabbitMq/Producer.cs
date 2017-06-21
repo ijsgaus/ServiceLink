@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 using RabbitLink.Messaging;
 using RabbitLink.Producer;
@@ -17,7 +18,7 @@ namespace ServiceLink.RabbitMq
             _routingKey = routingKey;
         }
 
-        public Task Publish(TMessage message, IMessageSource source)
+        public Task Publish(TMessage message, IMessageSource source, CancellationToken token)
         {
             var msg = _serializer.Serialize(message);
             var messageProps = new LinkMessageProperties
@@ -30,7 +31,7 @@ namespace ServiceLink.RabbitMq
             {
                 RoutingKey = _routingKey
             };
-            return _producer.PublishAsync(msg.Data, messageProps, publishProps);
+            return _producer.PublishAsync(msg.Data, messageProps, publishProps, token);
         }
     }
 }

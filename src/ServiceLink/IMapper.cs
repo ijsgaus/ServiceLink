@@ -1,7 +1,7 @@
 ﻿namespace ServiceLink
 {
-    public interface IMapper<TSource, TTarget>
+    public interface IMapper
     {
-        TTarget Map(TSource source);
+        TTarget Map<TSource, TTarget>(TSource source);
     }
 }

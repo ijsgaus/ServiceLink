@@ -2,6 +2,8 @@
 using System.Collections.Concurrent;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ServiceLink
@@ -10,13 +12,30 @@ namespace ServiceLink
     public interface ISender<TSource, TService>
         where TSource : IMessageSource
     {
-        Task Fire<TMessage>(Expression<Func<TService, IEndPoint<TMessage>>> selector, TMessage message);
+        Task Fire<TMessage>(Expression<Func<TService, IEndPoint<TMessage>>> selector, TMessage message, CancellationToken token);
 
+        //Task Fire<TMessage>(Expression<Func<TService, Action<TMessage>>> selector, TMessage message, CancellationToken token);
+        
         void Publish<TMessage, TStore>(Expression<Func<TService, IEndPoint<TMessage>>> selector, TStore store,
-            TMessage message);
+            TMessage message)
+            where TStore : IDeliveryStore;
 
-        Guid Deliver<TMessage, TAnswer, TStore>(Expression<Func<TService, IEndPoint<TMessage, TAnswer>>> selector,
-            TStore store, TMessage message);
+        Guid Deliver<TMessage, TAnswer, TStore>(Expression<Func<TService, IEndPoint<TMessage, TAnswer>>> selector, TStore store, TMessage message, TimeSpan? resend)
+            where TStore : IDeliveryStore;
+    }
+
+    public interface IDeliveryStore
+    {
+        IDeliveryLease Save<TMessage>(EndPointInfo info, TMessage message);
+        void AfterCommit(Action action);
+    }
+
+    public interface IDeliveryLease 
+    {
+        Guid DeliveryId { get; }
+        bool Renew(TimeSpan? interval = null);
+        Task WhenRenew(CancellationToken token);
+        void RemoveDelivery();
     }
 
     public interface IMessageSource
@@ -45,7 +64,7 @@ namespace ServiceLink
 
     public interface IProducer<in TMessage>
     {
-        Task Publish(TMessage message, IMessageSource source);
+        Task Publish(TMessage message, IMessageSource source, CancellationToken token);
     }
 
     public interface IMetaProvider<TService>
@@ -70,16 +89,79 @@ namespace ServiceLink
             _transport = transport;
         }
 
-        public Task Fire<TMessage>(Expression<Func<TService, IEndPoint<TMessage>>> selector, TMessage message)
+        public Task Fire<TMessage>(Expression<Func<TService, IEndPoint<TMessage>>> selector, TMessage message, CancellationToken token)
         {
             var endPointInfo = new EndPointInfo(_metaProvider.ServiceName, _metaProvider.GetEndPointName(selector.GetProperty()));
             var producer = _transport.GetOrAddProducer<TMessage>(endPointInfo);
-            return producer.Publish(message, _source);
+            return producer.Publish(message, _source, token);
         }
 
-        public Guid Deliver<TMessage, TAnswer, TStore>(Expression<Func<TService, IEndPoint<TMessage, TAnswer>>> selector, TStore store, TMessage message)
+        public Guid Deliver<TMessage, TAnswer, TStore>(
+            Expression<Func<TService, IEndPoint<TMessage, TAnswer>>> selector, TStore store, TMessage message, TimeSpan? resend)
+            where TStore : IDeliveryStore
         {
-            throw new NotImplementedException();
+            var endPointInfo = new EndPointInfo(_metaProvider.ServiceName,
+                _metaProvider.GetEndPointName(selector.GetProperty()));
+            var producer = _transport.GetOrAddProducer<TMessage>(endPointInfo);
+            var lease = store.Save(endPointInfo, message);
+
+            store.AfterCommit(() =>
+            {
+                var completeSource = new CancellationTokenSource();
+                var leaseSource = new CancellationTokenSource();
+                RenewLoop(lease, () => leaseSource.Cancel(), completeSource.Token)
+                    .ContinueWith(_ => leaseSource.Dispose(), TaskContinuationOptions.ExecuteSynchronously);
+                producer.Publish(message, _source, leaseSource.Token)
+                    .ContinueWith(tsk =>
+                    {
+                        completeSource.Cancel();
+                        completeSource.Dispose();
+                        if (tsk.Status == TaskStatus.RanToCompletion)
+                            lease.Renew(resend);
+                    },TaskContinuationOptions.ExecuteSynchronously);
+            });
+            return lease.DeliveryId;
+        }
+
+        public void Publish<TMessage, TStore>(Expression<Func<TService, IEndPoint<TMessage>>> selector, TStore store,
+            TMessage message) where TStore : IDeliveryStore
+        {
+            var endPointInfo = new EndPointInfo(_metaProvider.ServiceName,
+                _metaProvider.GetEndPointName(selector.GetProperty()));
+            var producer = _transport.GetOrAddProducer<TMessage>(endPointInfo);
+            var lease = store.Save(endPointInfo, message);
+
+            store.AfterCommit(() =>
+            {
+                var completeSource = new CancellationTokenSource();
+                var leaseSource = new CancellationTokenSource();
+                RenewLoop(lease, () => leaseSource.Cancel(), completeSource.Token)
+                    .ContinueWith(_ => leaseSource.Dispose(), TaskContinuationOptions.ExecuteSynchronously);
+                producer.Publish(message, _source, leaseSource.Token)
+                    .ContinueWith(tsk =>
+                    {
+                        if (tsk.Status == TaskStatus.RanToCompletion)
+                            lease.RemoveDelivery();
+                        completeSource.Cancel();
+                        completeSource.Dispose();
+                    },TaskContinuationOptions.ExecuteSynchronously);
+            });
+
+        }
+
+        private static async Task RenewLoop(IDeliveryLease lease, Action cancel, CancellationToken token)
+        {
+            do
+            {
+                await lease.WhenRenew(token);
+                token.ThrowIfCancellationRequested();
+                if (!lease.Renew())
+                {
+                    cancel();
+                    break;
+                }
+                token.ThrowIfCancellationRequested();
+            } while (true);
         }
     }
 }
