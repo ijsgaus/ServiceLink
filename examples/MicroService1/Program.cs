@@ -18,7 +18,7 @@ namespace MicroService1
         
         static void Main(string[] args)
         {
-            Run<ICommandSource, Command>(p => p.Exec);
+            Run<ICommandSource, Command>(p => p.Execute);
             Console.WriteLine("Hello World!");
         }
     }

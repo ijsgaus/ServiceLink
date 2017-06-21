@@ -15,5 +15,27 @@ namespace ServiceLink
             if(propInfo == null) throw new ArgumentException($"Invalid property selector {selector}");
             return propInfo;
         }
+
+        public static MethodInfo GetMethod<TOwner, TValue>([NotNull] this Expression<Func<TOwner, Action<TValue>>> selector)
+        {
+            if (selector == null) throw new ArgumentNullException(nameof(selector));
+            var unary = selector.Body as UnaryExpression;
+            var mce = unary?.Operand as MethodCallExpression;
+            var ce = mce?.Object as ConstantExpression;
+            var mi = ce?.Value as MethodInfo;
+            if(mi == null) throw new ArgumentException($"Invalid method selector {selector}");
+            return mi;
+        }
+        
+        public static MethodInfo GetMethod<TOwner, TValue, TResult>([NotNull] this Expression<Func<TOwner, Func<TValue, TResult>>> selector)
+        {
+            if (selector == null) throw new ArgumentNullException(nameof(selector));
+            var unary = selector.Body as UnaryExpression;
+            var mce = unary?.Operand as MethodCallExpression;
+            var ce = mce?.Object as ConstantExpression;
+            var mi = ce?.Value as MethodInfo;
+            if(mi == null) throw new ArgumentException($"Invalid method selector {selector}");
+            return mi;
+        }
     }
 }

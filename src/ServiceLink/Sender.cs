@@ -1,79 +1,10 @@
-﻿using System;
-using System.Collections.Concurrent;
+using System;
 using System.Linq.Expressions;
-using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace ServiceLink
 {
-
-    public interface ISender<TSource, TService>
-        where TSource : IMessageSource
-    {
-        Task Fire<TMessage>(Expression<Func<TService, IEndPoint<TMessage>>> selector, TMessage message, CancellationToken token);
-
-        //Task Fire<TMessage>(Expression<Func<TService, Action<TMessage>>> selector, TMessage message, CancellationToken token);
-        
-        void Publish<TMessage, TStore>(Expression<Func<TService, IEndPoint<TMessage>>> selector, TStore store,
-            TMessage message)
-            where TStore : IDeliveryStore;
-
-        Guid Deliver<TMessage, TAnswer, TStore>(Expression<Func<TService, IEndPoint<TMessage, TAnswer>>> selector, TStore store, TMessage message, TimeSpan? resend)
-            where TStore : IDeliveryStore;
-    }
-
-    public interface IDeliveryStore
-    {
-        IDeliveryLease Save<TMessage>(EndPointInfo info, TMessage message);
-        void AfterCommit(Action action);
-    }
-
-    public interface IDeliveryLease 
-    {
-        Guid DeliveryId { get; }
-        bool Renew(TimeSpan? interval = null);
-        Task WhenRenew(CancellationToken token);
-        void RemoveDelivery();
-    }
-
-    public interface IMessageSource
-    {
-        string Application { get; }
-    }
-
-
-    public interface ITransport
-    {
-        IProducer<TMessage> GetOrAddProducer<TMessage>(EndPointInfo info);
-    }
-
-    public class EndPointInfo
-    {
-        public EndPointInfo(string serviceName, string endpointName)
-        {
-            ServiceName = serviceName;
-            EndpointName = endpointName;
-        }
-
-        public string ServiceName { get; }
-        public string EndpointName { get; }
-    }
-    
-
-    public interface IProducer<in TMessage>
-    {
-        Task Publish(TMessage message, IMessageSource source, CancellationToken token);
-    }
-
-    public interface IMetaProvider<TService>
-        where TService : class
-    {
-        string ServiceName { get; }
-        string GetEndPointName(PropertyInfo endPoint);
-    }
-
     internal class Sender<TSource, TService> : ISender<TSource, TService>
         where TService : class 
         where TSource : IMessageSource
@@ -89,19 +20,19 @@ namespace ServiceLink
             _transport = transport;
         }
 
-        public Task Fire<TMessage>(Expression<Func<TService, IEndPoint<TMessage>>> selector, TMessage message, CancellationToken token)
+        public Task Fire<TMessage>(Expression<Func<TService, Action<TMessage>>> selector, TMessage message, CancellationToken token)
         {
-            var endPointInfo = new EndPointInfo(_metaProvider.ServiceName, _metaProvider.GetEndPointName(selector.GetProperty()));
+            var endPointInfo = new EndPointInfo(_metaProvider.ServiceName, _metaProvider.GetEndPointName(selector.GetMethod()));
             var producer = _transport.GetOrAddProducer<TMessage>(endPointInfo);
             return producer.Publish(message, _source, token);
         }
 
         public Guid Deliver<TMessage, TAnswer, TStore>(
-            Expression<Func<TService, IEndPoint<TMessage, TAnswer>>> selector, TStore store, TMessage message, TimeSpan? resend)
+            Expression<Func<TService, Func<TMessage, TAnswer>>> selector, TStore store, TMessage message, TimeSpan? resend)
             where TStore : IDeliveryStore
         {
             var endPointInfo = new EndPointInfo(_metaProvider.ServiceName,
-                _metaProvider.GetEndPointName(selector.GetProperty()));
+                _metaProvider.GetEndPointName(selector.GetMethod()));
             var producer = _transport.GetOrAddProducer<TMessage>(endPointInfo);
             var lease = store.Save(endPointInfo, message);
 
@@ -123,11 +54,11 @@ namespace ServiceLink
             return lease.DeliveryId;
         }
 
-        public void Publish<TMessage, TStore>(Expression<Func<TService, IEndPoint<TMessage>>> selector, TStore store,
+        public void Publish<TMessage, TStore>(Expression<Func<TService, Action<TMessage>>> selector, TStore store,
             TMessage message) where TStore : IDeliveryStore
         {
             var endPointInfo = new EndPointInfo(_metaProvider.ServiceName,
-                _metaProvider.GetEndPointName(selector.GetProperty()));
+                _metaProvider.GetEndPointName(selector.GetMethod()));
             var producer = _transport.GetOrAddProducer<TMessage>(endPointInfo);
             var lease = store.Save(endPointInfo, message);
 

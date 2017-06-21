@@ -18,5 +18,10 @@ namespace MicroService1
         {
             _sender.Fire(p => p.Execute, new Command(), CancellationToken.None);
         }
+
+        public void SendExecute<TStore>(TStore store) where TStore : IDeliveryStore
+        {
+            _sender.Deliver(p => p.Exec, store, new Command(), null);
+        }
     }
 }

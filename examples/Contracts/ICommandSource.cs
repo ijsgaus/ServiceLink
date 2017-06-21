@@ -1,12 +1,13 @@
-﻿using ServiceLink;
+﻿
+using System;
 
 namespace Contracts
 {
     public interface ICommandSource
     {
-        IEndPoint<Command> Execute { get; }
+        void Execute(Command command);
 
-        void Exec(Command command);
+        Func<Command, int> Exec { get; }
     }
 
     public class Command

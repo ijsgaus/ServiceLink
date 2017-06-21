@@ -8,11 +8,6 @@
     <PackageReference Include="RabbitLink" Version="0.4.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ServiceLink.Abstractions\ServiceLink.Abstractions.csproj">
-      <Project>{03041561-5f6d-4191-b507-9ef724432b0e}</Project>
-      <Name>ServiceLink.Abstractions</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ServiceLink\ServiceLink.csproj" />
     <ProjectReference Include="..\ServiceLink\ServiceLink.csproj">
       <Project>{b4812568-273e-44bf-803c-23360d759184}</Project>
       <Name>ServiceLink</Name>
