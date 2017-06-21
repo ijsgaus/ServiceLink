@@ -1,9 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFrameworks>netstandard1.6;net461</TargetFrameworks>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="10.4.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="1.1.2" />
@@ -14,9 +12,13 @@
     <PackageReference Include="System.ValueTuple" Version="4.3.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="1.1.1" />
   </ItemGroup>
-
   <ItemGroup>
     <Folder Include="Monads\" />
   </ItemGroup>
-
+  <ItemGroup>
+    <ProjectReference Include="..\ServiceLink.Abstractions\ServiceLink.Abstractions.csproj">
+      <Project>{03041561-5f6d-4191-b507-9ef724432b0e}</Project>
+      <Name>ServiceLink.Abstractions</Name>
+    </ProjectReference>
+  </ItemGroup>
 </Project>

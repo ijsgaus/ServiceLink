@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.ValueTuple">
+      <Version>4.3.1</Version>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ServiceLink.Abstractions\ServiceLink.Abstractions.csproj">
+      <Project>{03041561-5f6d-4191-b507-9ef724432b0e}</Project>
+      <Name>ServiceLink.Abstractions</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\ServiceLink\ServiceLink.csproj">
+      <Project>{b4812568-273e-44bf-803c-23360d759184}</Project>
+      <Name>ServiceLink</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Contracts\Contracts.csproj">
+      <Project>{be7f1322-ab70-4dc1-9e2b-fb1a992b5e67}</Project>
+      <Name>Contracts</Name>
+    </ProjectReference>
+  </ItemGroup>
+</Project>
