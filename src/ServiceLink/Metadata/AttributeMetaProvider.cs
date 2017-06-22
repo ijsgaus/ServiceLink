@@ -2,7 +2,7 @@
 using System.Reflection;
 using JetBrains.Annotations;
 
-namespace ServiceLink
+namespace ServiceLink.Metadata
 {
     public abstract class AttributeMetaProvider<TServiceAttribute, TMethodAttribute, TService> : IMetaProvider<TService> 
         where TService : class

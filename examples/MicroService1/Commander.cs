@@ -5,23 +5,25 @@ using Contracts;
 namespace MicroService1
 {
     public class Commander<TSource>
-        where TSource : IMessageSource
+        where TSource : ILinkStakeHolder
     {
-        private readonly ISender<TSource, ICommandSource> _sender;
+        private readonly IServiceLink<TSource, ICommandSource> _link;
+        
 
-        public Commander(ISender<TSource, ICommandSource> sender)
+        public Commander(IServiceLink<TSource, ICommandSource> link)
         {
-            _sender = sender;
+            _link = link;
+        
         }
 
         public void SendExec()
         {
-            _sender.Fire(p => p.Execute, new Command(), CancellationToken.None);
+            _link.EndPoint(p => p.Sample).FireAsync(new SampleEvent());
         }
 
         public void SendExecute<TStore>(TStore store) where TStore : IDeliveryStore
         {
-            _sender.Deliver(p => p.Exec, store, new Command(), null);
+            _link.EndPoint(p => p.SampleWithAnswer).Publish(store, new Command());
         }
     }
 }

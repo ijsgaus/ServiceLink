@@ -1,4 +1,5 @@
-﻿using ServiceLink.Monads;
+﻿using Newtonsoft.Json;
+using ServiceLink.Monads;
 
 namespace ServiceLink
 {
@@ -17,10 +18,38 @@ namespace ServiceLink
 
     public class EncodedType
     {
+        private readonly string _encodedType;
+
+        internal EncodedType(string encodedType)
+        {
+            _encodedType = encodedType;
+        }
+
+        public override string ToString()
+        {
+            return _encodedType;
+        }
+        
+        public static EncodedType Parse(string encodedType)
+            => new EncodedType(encodedType);
     }
 
     public class ContentType
     {
+        private readonly string _contentType;
+
+        internal ContentType(string contentType)
+        {
+            _contentType = contentType;
+        }
+
+        public override string ToString()
+        {
+            return _contentType;
+        }
+        
+        public static ContentType Parse(string contentType)
+            => new ContentType(contentType);
     }
 
     public interface ISerializerSelector<TTarget>

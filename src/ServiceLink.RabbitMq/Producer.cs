@@ -1,37 +1,39 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using RabbitLink.Messaging;
 using RabbitLink.Producer;
+using ServiceLink.Transport;
 
 namespace ServiceLink.RabbitMq
 {
+     
+    
     internal class Producer<TMessage> : IProducer<TMessage>
     {
-        private readonly ILinkProducer _producer;
+        private readonly Func<TMessage, PublishParameters, (LinkMessageProperties, LinkPublishProperties)> _propertyFactory;
+        private readonly Lazy<ILinkProducer> _producer;
         private readonly ISerializer<byte[]> _serializer;
-        private readonly string _routingKey;
+        
 
-        public Producer(ILinkProducer producer, ISerializer<byte[]> serializer, string routingKey)
+        public Producer([NotNull] Func<ILinkProducer> producerFactory, [NotNull] Func<TMessage, PublishParameters, (LinkMessageProperties, LinkPublishProperties)> propertyFactory,
+            [NotNull] ISerializer<byte[]> serializer)
         {
-            _producer = producer;
-            _serializer = serializer;
-            _routingKey = routingKey;
+            _propertyFactory = propertyFactory ?? throw new ArgumentNullException(nameof(propertyFactory));
+            if (producerFactory == null) throw new ArgumentNullException(nameof(producerFactory));
+            
+            _producer = new Lazy<ILinkProducer>(producerFactory);
+            _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
+            
         }
 
-        public Task Publish(TMessage message, IMessageSource source, CancellationToken token)
+        public Func<CancellationToken, Task> Publish(TMessage message, PublishParameters parameters)
         {
             var msg = _serializer.Serialize(message);
-            var messageProps = new LinkMessageProperties
-            {
-                AppId = source.Application,
-                ContentType = msg.ContentType.ToString(),
-                Type = msg.Type.ToString()
-            };
-            var publishProps = new LinkPublishProperties
-            {
-                RoutingKey = _routingKey
-            };
-            return _producer.PublishAsync(msg.Data, messageProps, publishProps, token);
+            var (msgProp, pubProp) = _propertyFactory(message, parameters);
+            var producer = _producer.Value;
+            return token => producer.PublishAsync(msg.Data, msgProp, pubProp, token);
         }
     }
 }
