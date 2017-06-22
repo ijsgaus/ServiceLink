@@ -13,6 +13,9 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="1.1.1" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Internals" />
+    <Folder Include="Metadata" />
     <Folder Include="Monads\" />
+    <Folder Include="Transport" />
   </ItemGroup>
 </Project>

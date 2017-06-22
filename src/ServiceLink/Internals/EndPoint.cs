@@ -67,13 +67,10 @@ namespace ServiceLink
             return lease.DeliveryId;
         }
 
-        protected IDisposable Subscibe(Action<IMessageHeader, TMessage> subscriber)
+        protected IDisposable Subscibe(Func<IMessageHeader, TMessage, Acknowledge> subscriber)
         {
-            return _transport.MessageConsumer.Subscribe((header, msg, token) =>
-            {
-                subscriber(header, msg);
-                return Task.CompletedTask;
-            }, true);
+            return _transport.MessageConsumer.Subscribe(
+                (header, msg, token) => Task.FromResult(subscriber(header, msg)), true);
         }
 
         private static async Task RenewLoop(ILogger logger,IDeliveryLease lease, Action cancel, CancellationToken token)
@@ -122,7 +119,7 @@ namespace ServiceLink
                 "Publishing with confirm {@message}, retry {@retry}", message, retry);
         }
 
-        public IDisposable Subscibe(Action<IMessageHeader, TMessage> subscriber)
+        public IDisposable Subscibe(Func<IMessageHeader, TMessage, Acknowledge> subscriber)
             => _logger.WithLog(() => Subscibe(subscriber), "Subscription");
     }
 

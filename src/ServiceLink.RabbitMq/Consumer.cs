@@ -12,17 +12,15 @@ namespace ServiceLink.RabbitMq
     internal class Consumer<TMessage> : IConsumer<TMessage>
     {
         private readonly Func<ILinkConsumer> _consumerFactory;
-        private readonly Func<Exception, Acknowledge> _errorPolicy;
         private readonly ISerializer<byte[]> _serializer;
 
-        public Consumer(Func<ILinkConsumer> consumerFactory, Func<Exception, Acknowledge> errorPolicy, ISerializer<byte[]> serializer)
+        public Consumer(Func<ILinkConsumer> consumerFactory, ISerializer<byte[]> serializer)
         {
             _consumerFactory = consumerFactory;
-            _errorPolicy = errorPolicy;
             _serializer = serializer;
         }
 
-        public IDisposable Subscribe(Func<IMessageHeader, TMessage, CancellationToken, Task> subscriber, bool awaitSubscriber)
+        public IDisposable Subscribe(Func<IMessageHeader, TMessage, CancellationToken, Task<Acknowledge>> subscriber, bool awaitSubscriber)
         {
             async Task Loop(ILinkConsumer consumer, CancellationToken token)
             {
@@ -31,16 +29,12 @@ namespace ServiceLink.RabbitMq
                     try
                     {
                         var header = new MessageHeader();
-                        var msg = _serializer.TryDeserialize<TMessage>(new Serialized(
+                        var msg = _serializer.TryDeserialize<TMessage>(new Serialized<TMessage>(
                             ContentType.Parse(linkMessage.Properties.ContentType),
                             EncodedType.Parse(linkMessage.Properties.Type),
                             linkMessage.Body)).Unwrap();
-                        await subscriber(header, msg, token);
-                    }
-                    catch (Exception ex)
-                    {
-                        if (token.IsCancellationRequested) return;
-                        switch (_errorPolicy(ex))
+                        var result = await subscriber(header, msg, token);
+                        switch (result)
                         {
                             case Acknowledge.Ack:
                                 await linkMessage.AckAsync(token);
@@ -51,10 +45,14 @@ namespace ServiceLink.RabbitMq
                             case Acknowledge.Requeue:
                                 await linkMessage.RequeueAsync(token);
                                 break;
-
                             default:
                                 throw new ArgumentOutOfRangeException();
                         }
+                    }
+                    catch (Exception)
+                    {
+                        if (token.IsCancellationRequested) return;
+                        throw;
                     }
                 }
                 
@@ -65,10 +63,10 @@ namespace ServiceLink.RabbitMq
                     {
                         message = await consumer.GetMessageAsync<byte[]>(token);
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
                         if (token.IsCancellationRequested) return;
-                        throw ex;
+                        throw;
                     }
                     if (token.IsCancellationRequested) return;
                     if (awaitSubscriber)
@@ -87,28 +85,5 @@ namespace ServiceLink.RabbitMq
             Loop(linkConsumer, cancellationDisposable.Token).ContinueWith(_ => linkConsumer.Dispose());
             return cancellationDisposable;
         }
-
-        
-        private class Serialized : ISerilized<byte[]>
-        {
-            public Serialized(ContentType contentType, EncodedType type, byte[] data)
-            {
-                ContentType = contentType;
-                Type = type;
-                Data = data;
-            }
-
-            public ContentType ContentType { get; }
-            public EncodedType Type { get; }
-            public byte[] Data { get; }
-        }
-        
-        private class MessageHeader : IMessageHeader
-        {
-            
-        }
-         
     }
-    
-    
 }

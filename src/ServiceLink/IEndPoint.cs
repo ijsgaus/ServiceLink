@@ -16,7 +16,7 @@ namespace ServiceLink
         Task FireAsync(TMessage message, CancellationToken? token = null);
         Guid Publish(IDeliveryStore store, TMessage message, TimeSpan? retryInterval = null);
         IObservable<TMessage> Published { get; }
-        IDisposable Subscibe(Action<IMessageHeader, TMessage> subscriber);
+        IDisposable Subscibe(Func<IMessageHeader, TMessage, Acknowledge> subscriber);
         //IDisposable Subscibe(Func<IMessageHeader, TMessage, CancellationToken, Task> subscriber);
     }
 
