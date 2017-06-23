@@ -4,9 +4,10 @@ using System.Threading.Tasks;
 
 namespace ServiceLink
 {
-    public interface IDeliveryLease 
+    public interface IDeliveryLease<out TMessage> 
     {
         Guid DeliveryId { get; }
+        TMessage Message { get; }
         bool Renew(TimeSpan? interval = null);
         Task WhenRenew(CancellationToken token);
         void RemoveDelivery();

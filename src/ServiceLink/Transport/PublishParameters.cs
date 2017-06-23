@@ -2,17 +2,38 @@
 
 namespace ServiceLink.Transport
 {
-    public class PublishParameters
+    public class SendParams
     {
-        public PublishParameters(string holderName, Guid? deliveryId, bool needAnswer)
+        public string HolderName { get; }
+        
+        private SendParams(string holderName)
         {
-            HolderName = holderName;
-            DeliveryId = deliveryId;
-            NeedAnswer = needAnswer;
+            
+        }
+        
+        public sealed class WhenPublish : SendParams
+        {
+            public WhenPublish(string holderName, Guid? deliveryId) : base(holderName)
+            {
+                DeliveryId = deliveryId;
+            }
+            
+            public Guid? DeliveryId { get; }
+        }
+        
+        public sealed class WhenAnswer : SendParams
+        {
+            public WhenAnswer(string holderName, Guid deliveryId) : base(holderName)
+            {
+                DeliveryId = deliveryId;
+            }
+            
+            public Guid DeliveryId { get; }
+            
         }
 
-        public string HolderName { get; }
-        public Guid? DeliveryId { get; }
-        public bool NeedAnswer { get; }
+        
+        
+        
     }
 }

@@ -6,6 +6,6 @@ namespace ServiceLink.Transport
 {
     public interface IConsumer<out TMessage>
     {
-        IDisposable Subscribe(Func<IMessageHeader, TMessage, CancellationToken, Task<Acknowledge>> subscriber, bool awaitSubscriber);
+        IDisposable Subscribe(Func<Envelope, TMessage, CancellationToken, Task<AnswerKind>> subscriber, bool awaitSubscriber);
     }
 }

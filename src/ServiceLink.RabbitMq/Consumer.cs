@@ -20,7 +20,7 @@ namespace ServiceLink.RabbitMq
             _serializer = serializer;
         }
 
-        public IDisposable Subscribe(Func<IMessageHeader, TMessage, CancellationToken, Task<Acknowledge>> subscriber, bool awaitSubscriber)
+        public IDisposable Subscribe(Func<Envelope, TMessage, CancellationToken, Task<AnswerKind>> subscriber, bool awaitSubscriber)
         {
             async Task Loop(ILinkConsumer consumer, CancellationToken token)
             {
@@ -28,7 +28,14 @@ namespace ServiceLink.RabbitMq
                 {
                     try
                     {
-                        var header = new MessageHeader();
+                        var deliveryId = Guid.TryParse(linkMessage.Properties.CorrelationId, out var guid)
+                            ? (Guid?) guid
+                            : null;
+                        var answerTo = linkMessage.Properties.ReplyTo;
+                        answerTo = string.IsNullOrWhiteSpace(answerTo) ? null : answerTo; 
+                        var header = 
+                            answerTo == null &&  deliveryId != null ? (Envelope) new Envelope.Answer(linkMessage.Properties.AppId, deliveryId.Value) 
+                                : new Envelope.Message(linkMessage.Properties.AppId, deliveryId);
                         var msg = _serializer.TryDeserialize<TMessage>(new Serialized<TMessage>(
                             ContentType.Parse(linkMessage.Properties.ContentType),
                             EncodedType.Parse(linkMessage.Properties.Type),
@@ -36,13 +43,13 @@ namespace ServiceLink.RabbitMq
                         var result = await subscriber(header, msg, token);
                         switch (result)
                         {
-                            case Acknowledge.Ack:
+                            case AnswerKind.Ack:
                                 await linkMessage.AckAsync(token);
                                 break;
-                            case Acknowledge.Nack:
+                            case AnswerKind.Nack:
                                 await linkMessage.NackAsync(token);
                                 break;
-                            case Acknowledge.Requeue:
+                            case AnswerKind.Requeue:
                                 await linkMessage.RequeueAsync(token);
                                 break;
                             default:

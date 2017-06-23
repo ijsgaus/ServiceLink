@@ -34,16 +34,16 @@ namespace ServiceLink
 
         protected Task FireAsync(TMessage message, CancellationToken? token = null)
         {
-            var parameters = new PublishParameters(_holder.Name, null, false);
+            var parameters = new SendParams.WhenPublish(_holder.Name, null);
             var task = _transport.MessageProducer.Publish(message, parameters)(token ?? CancellationToken.None);
             task.ToObservable().Select(_ => message).Subscribe(_eventer.Published);
             return task;
         }
 
-        protected Guid Publish(IDeliveryStore store, TMessage message, TimeSpan? retryInterval)
+        protected Guid Publish(IDeliveryStore<TMessage> store, TMessage message, TimeSpan? retryInterval)
         {
-            var lease = store.Save(Info, message);
-            var parameters = new PublishParameters(_holder.Name, lease.DeliveryId, retryInterval.HasValue);
+            var lease = store.CreateDelivery(Info, message);
+            var parameters = new SendParams.WhenPublish(_holder.Name, retryInterval.HasValue ? ((Guid?) lease.DeliveryId) : null);
             var produce = _transport.MessageProducer.Publish(message, parameters);
             store.AfterCommit(() =>
             {
@@ -67,13 +67,83 @@ namespace ServiceLink
             return lease.DeliveryId;
         }
 
-        protected IDisposable Subscibe(Func<IMessageHeader, TMessage, Acknowledge> subscriber)
+        protected IDisposable Subscibe(Func<Envelope, TMessage, Answer<TAnswer>> subscriber)
         {
             return _transport.MessageConsumer.Subscribe(
-                (header, msg, token) => Task.FromResult(subscriber(header, msg)), true);
+                AsConsumeSync(_logger, subscriber, _transport.AnswerProducer, h => new SendParams.WhenAnswer(_holder.Name, h.DeliveryId)), true);
+        }
+        
+        protected IDisposable Subscibe(Func<Envelope, TMessage, CancellationToken, Task<Answer<TAnswer>>> subscriber)
+        {
+            return _transport.MessageConsumer.Subscribe(
+                AsConsumeAsync(_logger, subscriber, _transport.AnswerProducer, h => new SendParams.WhenAnswer(_holder.Name, h.DeliveryId)), false);
         }
 
-        private static async Task RenewLoop(ILogger logger,IDeliveryLease lease, Action cancel, CancellationToken token)
+        private static Func<Envelope, TMessage, CancellationToken, Task<AnswerKind>> AsConsumeSync(ILogger logger,
+            Func<Envelope, TMessage, Answer<TAnswer>> subscriber, IProducer<TAnswer> producer,
+            Func<Envelope.Answer, SendParams> paramFactory)
+            => (header, msg, token) => 
+            {
+                using (logger.BeginScope("Reciving message {@message}", msg))
+                {
+                    try
+                    {
+                        var result = subscriber(header, msg);
+                        if (header is Envelope.Answer envAnswer)
+                        
+                            result.Match(ans =>
+                                {
+                                    logger.LogTrace("Sending answer");
+                                    producer.Publish(ans, paramFactory(envAnswer))(CancellationToken.None);
+                                },
+                                () => { }, () => { });
+                        
+                        logger.LogTrace("Recieved {@result}", result);
+                        return Task.FromResult(result.Kind);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(0, ex, "Error reciving");
+                        throw;
+                    }
+                }
+                    
+                
+            };
+
+        
+        private static Func<Envelope, TMessage, CancellationToken, Task<AnswerKind>> AsConsumeAsync(ILogger logger,
+            Func<Envelope, TMessage, CancellationToken, Task<Answer<TAnswer>>> subscriber, IProducer<TAnswer> producer,
+            Func<Envelope.Answer, SendParams> paramFactory)
+            => async (header, msg, token) =>
+            {
+                using (logger.BeginScope("Reciving message {@message}", msg))
+                {
+                    try
+                    {
+                        var result = await subscriber(header, msg, token);
+                        if (header is Envelope.Answer envAns)
+                        
+                            result.Match(ans =>
+                                {
+                                    logger.LogTrace("Sending answer");
+                                    producer.Publish(ans, paramFactory(envAns))(token);
+                                },
+                                () => { }, () => { });
+                        
+                        logger.LogTrace("Recieved {@result}", result);
+                        return result.Kind;
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(0, ex, "Error reciving");
+                        throw;
+                    }
+                }
+            };
+
+
+        private static async Task RenewLoop<TMessage>(ILogger logger,IDeliveryLease<TMessage> lease, Action cancel, CancellationToken token)
         {
             using (logger.BeginScope("Delivery publishing {@delivery}", lease.DeliveryId))
             {
@@ -112,14 +182,14 @@ namespace ServiceLink
         Task IEndPoint<TMessage>.FireAsync(TMessage message, CancellationToken? token)
             => _logger.WithLog(() => FireAsync(message, token), "Fire {@message}", message);
 
-        Guid IEndPoint<TMessage>.Publish(IDeliveryStore store, TMessage message, TimeSpan? retryInterval)
+        Guid IEndPoint<TMessage>.Publish(IDeliveryStore<TMessage> store, TMessage message, TimeSpan? retryInterval)
         {
             var retry = _defaultRetry == null ? null : retryInterval ?? _defaultRetry;
             return _logger.WithLog(() => Publish(store, message, retry),
                 "Publishing with confirm {@message}, retry {@retry}", message, retry);
         }
 
-        public IDisposable Subscibe(Func<IMessageHeader, TMessage, Acknowledge> subscriber)
+        public IDisposable Subscibe(Func<Envelope, TMessage, Answer<ValueTuple>> subscriber)
             => _logger.WithLog(() => Subscibe(subscriber), "Subscription");
     }
 
@@ -138,7 +208,7 @@ namespace ServiceLink
             _defaultRetry = defaultRetry;
         }
 
-        Guid IEndPoint<TMessage, TAnswer>.Publish(IDeliveryStore store, TMessage message, TimeSpan? retryInterval)
+        Guid IEndPoint<TMessage, TAnswer>.Publish(IDeliveryStore<TMessage> store, TMessage message, TimeSpan? retryInterval)
         {
             var retry = _defaultRetry == null ? null : retryInterval ?? _defaultRetry;
             return _logger.WithLog(() => Publish(store, message, retry),

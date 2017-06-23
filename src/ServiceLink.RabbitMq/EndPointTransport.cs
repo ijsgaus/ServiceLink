@@ -14,8 +14,6 @@ namespace ServiceLink.RabbitMq
 {
     internal class EndPointTransport<TMessage, TAnswer> : IEndPointTransport<TMessage, TAnswer>
     {
-        private readonly Func<Exception, Acknowledge> _messageErrorPolicy;
-        private readonly Func<Exception, Acknowledge> _answerErrorPolicy;
         
 
 

@@ -6,6 +6,6 @@ namespace ServiceLink.Transport
 {
     public interface IProducer<in TMessage>
     {
-        Func<CancellationToken, Task> Publish(TMessage message, PublishParameters parameters);
+        Func<CancellationToken, Task> Publish(TMessage message, SendParams @params);
     }
 }

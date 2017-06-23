@@ -21,7 +21,7 @@ namespace MicroService1
             _link.EndPoint(p => p.Sample).FireAsync(new SampleEvent());
         }
 
-        public void SendExecute<TStore>(TStore store) where TStore : IDeliveryStore
+        public void SendExecute<TStore>(TStore store) where TStore : IDeliveryStore<Command>
         {
             _link.EndPoint(p => p.SampleWithAnswer).Publish(store, new Command());
         }

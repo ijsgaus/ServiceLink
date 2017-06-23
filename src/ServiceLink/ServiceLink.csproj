@@ -15,7 +15,6 @@
   <ItemGroup>
     <Folder Include="Internals" />
     <Folder Include="Metadata" />
-    <Folder Include="Monads\" />
     <Folder Include="Transport" />
   </ItemGroup>
 </Project>
