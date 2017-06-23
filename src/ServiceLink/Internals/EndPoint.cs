@@ -189,7 +189,12 @@ namespace ServiceLink
                 "Publishing with confirm {@message}, retry {@retry}", message, retry);
         }
 
-        public IDisposable Subscibe(Func<Envelope, TMessage, Answer<ValueTuple>> subscriber)
+
+        IDisposable IEndPoint<TMessage>.Subscibe(Func<Envelope, TMessage, Answer<ValueTuple>> subscriber)
+            => _logger.WithLog(() => Subscibe(subscriber), "Subscription");
+
+        IDisposable IEndPoint<TMessage>.Subscibe(
+            Func<Envelope, TMessage, CancellationToken, Task<Answer<ValueTuple>>> subscriber)
             => _logger.WithLog(() => Subscibe(subscriber), "Subscription");
     }
 
@@ -214,5 +219,11 @@ namespace ServiceLink
             return _logger.WithLog(() => Publish(store, message, retry),
                 "Publishing with confirm {@message}, retry {@retry}", message, retry);
         }
+
+        IDisposable IEndPoint<TMessage, TAnswer>.Subscibe(Func<Envelope, TMessage, Answer<TAnswer>> subscriber)
+            => _logger.WithLog(() => Subscibe(subscriber), "Subscription");
+
+        IDisposable IEndPoint<TMessage, TAnswer>.Subscibe(Func<Envelope, TMessage, CancellationToken, Task<Answer<TAnswer>>> subscriber)
+            => _logger.WithLog(() => Subscibe(subscriber), "Subscription");
     }
 }

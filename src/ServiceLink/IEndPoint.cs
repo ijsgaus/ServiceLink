@@ -9,6 +9,8 @@ namespace ServiceLink
     {
         Guid Publish(IDeliveryStore<TMessage> store, TMessage message, TimeSpan? retryInterval = null);
         IObservable<TMessage> Published { get; }
+        IDisposable Subscibe(Func<Envelope, TMessage, Answer<TAnswer>> subscriber);
+        IDisposable Subscibe(Func<Envelope, TMessage, CancellationToken, Task<Answer<TAnswer>>> subscriber);
     }
 
     public interface IEndPoint<TMessage> : IEndPoint
@@ -17,7 +19,7 @@ namespace ServiceLink
         Guid Publish(IDeliveryStore<TMessage> store, TMessage message, TimeSpan? retryInterval = null);
         IObservable<TMessage> Published { get; }
         IDisposable Subscibe(Func<Envelope, TMessage, Answer<ValueTuple>> subscriber);
-        //IDisposable Subscibe(Func<IMessageHeader, TMessage, CancellationToken, Task> subscriber);
+        IDisposable Subscibe(Func<Envelope, TMessage, CancellationToken, Task<Answer<ValueTuple>>> subscriber);
     }
 
     public interface IEndPoint
