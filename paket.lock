@@ -1,0 +1,6 @@
+
+
+GROUP Tools
+NUGET
+  remote: https://api.nuget.org/v3/index.json
+    FAKE (4.61.3)
