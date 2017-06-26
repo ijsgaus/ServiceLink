@@ -2,9 +2,9 @@ using System;
 
 namespace ServiceLink
 {
-    public interface IDeliveryStore<TMessage>
+    public interface IDeliveryStore
     {
-        IDeliveryLeaseController<TMessage> CreateDelivery(EndPointInfo info, TMessage message);
+        IDeliveryLeaseController<TMessage> CreateDelivery<TMessage>(EndPointInfo info, TMessage message);
         void AfterCommit(Action action);
     }
 }
