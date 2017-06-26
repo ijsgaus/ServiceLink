@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 namespace ServiceLink
 {
     public interface IServiceLink<THolder, TService>
-        where THolder : ILinkStakeHolder 
+        where THolder : IStakeHolder 
         where TService : class
     {
         IEndPoint<TMessage> EndPoint<TMessage>(Expression<Func<TService, EventHandler<TMessage>>> selector);

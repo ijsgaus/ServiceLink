@@ -1,6 +1,6 @@
 namespace ServiceLink
 {
-    public interface ILinkStakeHolder
+    public interface IStakeHolder<IHolderStore>
     {
         string Name { get; }
     }

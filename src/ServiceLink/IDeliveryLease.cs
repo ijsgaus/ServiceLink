@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace ServiceLink
 {
-    public interface IDeliveryLease<out TMessage> 
+    public interface IDeliveryLeaseController<out TMessage> 
     {
         Guid DeliveryId { get; }
         TMessage Message { get; }

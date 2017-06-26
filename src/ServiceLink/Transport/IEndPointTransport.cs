@@ -6,9 +6,9 @@ namespace ServiceLink.Transport
 {
     public interface IEndPointTransport<TMessage, TAnswer>
     {
-        IProducer<TMessage> MessageProducer { get; }
-        IProducer<TAnswer> AnswerProducer { get; }
-        IConsumer<TMessage> MessageConsumer { get; }
-        IConsumer<TAnswer> AnswerConsumer { get; }
+        IOutPoint<TMessage> MessageOutPoint { get; }
+        IOutPoint<TAnswer> AnswerOutPoint { get; }
+        IInPoint<TMessage> MessageInPoint { get; }
+        IInPoint<TAnswer> AnswerInPoint { get; }
     }
 }

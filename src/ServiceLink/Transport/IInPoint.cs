@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace ServiceLink.Transport
 {
-    public interface IConsumer<out TMessage>
+    public interface IInPoint<out TMessage>
     {
         IDisposable Subscribe(Func<Envelope, TMessage, CancellationToken, Task<AnswerKind>> subscriber, bool awaitSubscriber);
     }

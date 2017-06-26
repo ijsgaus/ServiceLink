@@ -5,7 +5,7 @@ using Contracts;
 namespace MicroService1
 {
     public class Commander<TSource>
-        where TSource : ILinkStakeHolder
+        where TSource : IStakeHolder
     {
         private readonly IServiceLink<TSource, ICommandSource> _link;
         

@@ -10,14 +10,14 @@ namespace ServiceLink.RabbitMq
 {
      
     
-    internal class Producer<TMessage> : IProducer<TMessage>
+    internal class OutPoint<TMessage> : IOutPoint<TMessage>
     {
         private readonly Func<TMessage, SendParams, (LinkMessageProperties, LinkPublishProperties)> _propertyFactory;
         private readonly Lazy<ILinkProducer> _producer;
         private readonly ISerializer<byte[]> _serializer;
         
 
-        public Producer([NotNull] Func<ILinkProducer> producerFactory, [NotNull] Func<TMessage, SendParams, (LinkMessageProperties, LinkPublishProperties)> propertyFactory,
+        public OutPoint([NotNull] Func<ILinkProducer> producerFactory, [NotNull] Func<TMessage, SendParams, (LinkMessageProperties, LinkPublishProperties)> propertyFactory,
             [NotNull] ISerializer<byte[]> serializer)
         {
             _propertyFactory = propertyFactory ?? throw new ArgumentNullException(nameof(propertyFactory));

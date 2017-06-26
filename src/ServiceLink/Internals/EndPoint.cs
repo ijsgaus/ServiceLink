@@ -15,10 +15,10 @@ namespace ServiceLink
         private readonly ILogger _logger;
         private readonly IEndPointEvents<TMessage> _eventer;
         private readonly IEndPointTransport<TMessage, TAnswer> _transport;
-        private readonly ILinkStakeHolder _holder;
+        private readonly IStakeHolder _holder;
 
         internal EndPointBase(ILogger logger,
-            [NotNull] EndPointInfo info, [NotNull] ILinkStakeHolder holder, [NotNull] IEndPointTransport<TMessage, TAnswer> transport,
+            [NotNull] EndPointInfo info, [NotNull] IStakeHolder holder, [NotNull] IEndPointTransport<TMessage, TAnswer> transport,
             [NotNull] IEndPointEvents<TMessage> eventer)
         {
             _logger = logger;
@@ -35,7 +35,7 @@ namespace ServiceLink
         protected Task FireAsync(TMessage message, CancellationToken? token = null)
         {
             var parameters = new SendParams.WhenPublish(_holder.Name, null);
-            var task = _transport.MessageProducer.Publish(message, parameters)(token ?? CancellationToken.None);
+            var task = _transport.MessageOutPoint.Publish(message, parameters)(token ?? CancellationToken.None);
             task.ToObservable().Select(_ => message).Subscribe(_eventer.Published);
             return task;
         }
@@ -44,7 +44,7 @@ namespace ServiceLink
         {
             var lease = store.CreateDelivery(Info, message);
             var parameters = new SendParams.WhenPublish(_holder.Name, retryInterval.HasValue ? ((Guid?) lease.DeliveryId) : null);
-            var produce = _transport.MessageProducer.Publish(message, parameters);
+            var produce = _transport.MessageOutPoint.Publish(message, parameters);
             store.AfterCommit(() =>
             {
                 var completeSource = new CancellationTokenSource();
@@ -69,18 +69,18 @@ namespace ServiceLink
 
         protected IDisposable Subscibe(Func<Envelope, TMessage, Answer<TAnswer>> subscriber)
         {
-            return _transport.MessageConsumer.Subscribe(
-                AsConsumeSync(_logger, subscriber, _transport.AnswerProducer, h => new SendParams.WhenAnswer(_holder.Name, h.DeliveryId)), true);
+            return _transport.MessageInPoint.Subscribe(
+                AsConsumeSync(_logger, subscriber, _transport.AnswerOutPoint, h => new SendParams.WhenAnswer(_holder.Name, h.DeliveryId)), true);
         }
         
         protected IDisposable Subscibe(Func<Envelope, TMessage, CancellationToken, Task<Answer<TAnswer>>> subscriber)
         {
-            return _transport.MessageConsumer.Subscribe(
-                AsConsumeAsync(_logger, subscriber, _transport.AnswerProducer, h => new SendParams.WhenAnswer(_holder.Name, h.DeliveryId)), false);
+            return _transport.MessageInPoint.Subscribe(
+                AsConsumeAsync(_logger, subscriber, _transport.AnswerOutPoint, h => new SendParams.WhenAnswer(_holder.Name, h.DeliveryId)), false);
         }
 
         private static Func<Envelope, TMessage, CancellationToken, Task<AnswerKind>> AsConsumeSync(ILogger logger,
-            Func<Envelope, TMessage, Answer<TAnswer>> subscriber, IProducer<TAnswer> producer,
+            Func<Envelope, TMessage, Answer<TAnswer>> subscriber, IOutPoint<TAnswer> outPoint,
             Func<Envelope.Answer, SendParams> paramFactory)
             => (header, msg, token) => 
             {
@@ -94,7 +94,7 @@ namespace ServiceLink
                             result.Match(ans =>
                                 {
                                     logger.LogTrace("Sending answer");
-                                    producer.Publish(ans, paramFactory(envAnswer))(CancellationToken.None);
+                                    outPoint.Publish(ans, paramFactory(envAnswer))(CancellationToken.None);
                                 },
                                 () => { }, () => { });
                         
@@ -113,7 +113,7 @@ namespace ServiceLink
 
         
         private static Func<Envelope, TMessage, CancellationToken, Task<AnswerKind>> AsConsumeAsync(ILogger logger,
-            Func<Envelope, TMessage, CancellationToken, Task<Answer<TAnswer>>> subscriber, IProducer<TAnswer> producer,
+            Func<Envelope, TMessage, CancellationToken, Task<Answer<TAnswer>>> subscriber, IOutPoint<TAnswer> outPoint,
             Func<Envelope.Answer, SendParams> paramFactory)
             => async (header, msg, token) =>
             {
@@ -127,7 +127,7 @@ namespace ServiceLink
                             result.Match(ans =>
                                 {
                                     logger.LogTrace("Sending answer");
-                                    producer.Publish(ans, paramFactory(envAns))(token);
+                                    outPoint.Publish(ans, paramFactory(envAns))(token);
                                 },
                                 () => { }, () => { });
                         
@@ -143,17 +143,17 @@ namespace ServiceLink
             };
 
 
-        private static async Task RenewLoop<TMessage>(ILogger logger,IDeliveryLease<TMessage> lease, Action cancel, CancellationToken token)
+        private static async Task RenewLoop<TMessage>(ILogger logger,IDeliveryLeaseController<TMessage> leaseController, Action cancel, CancellationToken token)
         {
-            using (logger.BeginScope("Delivery publishing {@delivery}", lease.DeliveryId))
+            using (logger.BeginScope("Delivery publishing {@delivery}", leaseController.DeliveryId))
             {
                 do
                 {
                     logger.LogTrace("Awaiting renew");
-                    await lease.WhenRenew(token);
+                    await leaseController.WhenRenew(token);
                     token.ThrowIfCancellationRequested();
                     logger.LogTrace("Renewing");
-                    if (!lease.Renew())
+                    if (!leaseController.Renew())
                     {
                         logger.LogTrace("Renew failed, cancelling");
                         cancel();
@@ -172,7 +172,7 @@ namespace ServiceLink
         private readonly TimeSpan? _defaultRetry;
 
         public EndPoint(ILogger<EndPoint<TService, TMessage>> logger,
-            [NotNull] EndPointInfo info, [NotNull] ILinkStakeHolder holder, [NotNull] IEndPointTransport<TMessage, ValueTuple> transport,
+            [NotNull] EndPointInfo info, [NotNull] IStakeHolder holder, [NotNull] IEndPointTransport<TMessage, ValueTuple> transport,
             [NotNull] IEndPointEvents<TMessage> eventer, TimeSpan? defaultRetry) : base(logger, info, holder, transport, eventer)
         {
             _logger = logger;
@@ -205,7 +205,7 @@ namespace ServiceLink
         private readonly TimeSpan? _defaultRetry;
 
         public EndPoint(ILogger<EndPoint<TService, TMessage, TAnswer>> logger, [NotNull] EndPointInfo info,
-            [NotNull] ILinkStakeHolder holder,
+            [NotNull] IStakeHolder holder,
             [NotNull] IEndPointTransport<TMessage, TAnswer> transport, [NotNull] IEndPointEvents<TMessage> eventer, TimeSpan? defaultRetry) : base(
             logger, info, holder, transport, eventer)
         {

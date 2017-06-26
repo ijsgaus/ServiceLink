@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace ServiceLink.Transport
 {
-    public interface IProducer<in TMessage>
+    public interface IOutPoint<in TMessage>
     {
         Func<CancellationToken, Task> Publish(TMessage message, SendParams @params);
     }

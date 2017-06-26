@@ -9,12 +9,12 @@ using ServiceLink.Transport;
 
 namespace ServiceLink.RabbitMq
 {
-    internal class Consumer<TMessage> : IConsumer<TMessage>
+    internal class InPoint<TMessage> : IInPoint<TMessage>
     {
         private readonly Func<ILinkConsumer> _consumerFactory;
         private readonly ISerializer<byte[]> _serializer;
 
-        public Consumer(Func<ILinkConsumer> consumerFactory, ISerializer<byte[]> serializer)
+        public InPoint(Func<ILinkConsumer> consumerFactory, ISerializer<byte[]> serializer)
         {
             _consumerFactory = consumerFactory;
             _serializer = serializer;

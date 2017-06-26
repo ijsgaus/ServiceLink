@@ -17,27 +17,27 @@ namespace ServiceLink.RabbitMq
         
 
 
-        public EndPointTransport([NotNull] Producer<TMessage> messageProducer,
-            [NotNull] Producer<TAnswer> answerProducer,
-            [NotNull] IConsumer<TMessage> messageConsumer,
-            [NotNull] IConsumer<TAnswer> answerConsumer)
+        public EndPointTransport([NotNull] OutPoint<TMessage> messageOutPoint,
+            [NotNull] OutPoint<TAnswer> answerOutPoint,
+            [NotNull] IInPoint<TMessage> messageInPoint,
+            [NotNull] IInPoint<TAnswer> answerInPoint)
         {
-            MessageConsumer = messageConsumer ?? throw new ArgumentNullException(nameof(messageConsumer));
-            AnswerConsumer = answerConsumer ?? throw new ArgumentNullException(nameof(answerConsumer));
-            MessageProducer = messageProducer ?? throw new ArgumentNullException(nameof(messageProducer));
-            AnswerProducer = answerProducer ?? throw new ArgumentNullException(nameof(answerProducer));
+            MessageInPoint = messageInPoint ?? throw new ArgumentNullException(nameof(messageInPoint));
+            AnswerInPoint = answerInPoint ?? throw new ArgumentNullException(nameof(answerInPoint));
+            MessageOutPoint = messageOutPoint ?? throw new ArgumentNullException(nameof(messageOutPoint));
+            AnswerOutPoint = answerOutPoint ?? throw new ArgumentNullException(nameof(answerOutPoint));
             
             
         }
 
 
-        public IProducer<TMessage> MessageProducer { get; }
+        public IOutPoint<TMessage> MessageOutPoint { get; }
 
-        public IProducer<TAnswer> AnswerProducer { get; }
+        public IOutPoint<TAnswer> AnswerOutPoint { get; }
 
-        public IConsumer<TMessage> MessageConsumer { get; }
+        public IInPoint<TMessage> MessageInPoint { get; }
 
-        public IConsumer<TAnswer> AnswerConsumer { get; }
+        public IInPoint<TAnswer> AnswerInPoint { get; }
     }
 
     
