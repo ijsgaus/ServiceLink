@@ -1,17 +1,15 @@
 ﻿
 using System;
+using ServiceLink.Markers;
 
 namespace Contracts
 {
     public interface ICommandSource
     {
-        EventHandler<SampleEvent> Sample { get; }
+        IEvent<SampleEvent> Sample { get; }
         
         
-        void Execute(Command command);
-
-        int Exec(Command command);
-        Func<Command, int> SampleWithAnswer { get; }
+        ICallable<Command, int> SampleWithAnswer { get; }
     }
 
     public class Command

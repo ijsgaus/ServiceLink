@@ -7,4 +7,10 @@
       <Version>4.3.1</Version>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ServiceLink.Markers\ServiceLink.Markers.csproj">
+      <Project>{f121e310-46ed-4446-9ce0-742bfc103bc2}</Project>
+      <Name>ServiceLink.Markers</Name>
+    </ProjectReference>
+  </ItemGroup>
 </Project>

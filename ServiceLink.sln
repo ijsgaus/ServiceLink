@@ -17,6 +17,8 @@ Project("{33FCE77B-7E42-4C50-87B7-AAD5BB25C26E}") = "Contracts", "examples\Contr
 EndProject
 Project("{57E79E34-C941-43BD-BB30-F02CDC7D930F}") = "MicroService1", "examples\MicroService1\MicroService1.csproj", "{93147ACB-382A-4DB6-A8E7-8D5804CAE813}"
 EndProject
+Project("{2C06F3C5-54E0-4493-9CC9-50EF827078A1}") = "ServiceLink.Markers", "src\ServiceLink.Markers\ServiceLink.Markers.csproj", "{F121E310-46ED-4446-9CE0-742BFC103BC2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{93147ACB-382A-4DB6-A8E7-8D5804CAE813}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{93147ACB-382A-4DB6-A8E7-8D5804CAE813}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{93147ACB-382A-4DB6-A8E7-8D5804CAE813}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F121E310-46ED-4446-9CE0-742BFC103BC2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F121E310-46ED-4446-9CE0-742BFC103BC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F121E310-46ED-4446-9CE0-742BFC103BC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F121E310-46ED-4446-9CE0-742BFC103BC2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -48,5 +54,6 @@ Global
 		{EE522141-8C34-46E0-ABD8-8B045332A2B6} = {AE05B580-F522-436A-8E0E-B6A84CA9FC6A}
 		{BE7F1322-AB70-4DC1-9E2B-FB1A992B5E67} = {0E355198-7B03-4517-AAB1-21A68B2DD66D}
 		{93147ACB-382A-4DB6-A8E7-8D5804CAE813} = {0E355198-7B03-4517-AAB1-21A68B2DD66D}
+		{F121E310-46ED-4446-9CE0-742BFC103BC2} = {AE05B580-F522-436A-8E0E-B6A84CA9FC6A}
 	EndGlobalSection
 EndGlobal

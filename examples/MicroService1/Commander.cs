@@ -4,13 +4,16 @@ using Contracts;
 
 namespace MicroService1
 {
-    public class Commander<TSource>
-        where TSource : IStakeHolder
+    public class Commander<TSource, TStore>
+        where TSource : IStoreHolder<TStore> 
+        where TStore : IDeliveryStore
     {
-        private readonly IServiceLink<TSource, ICommandSource> _link;
+        private readonly TSource _source; 
+        
+        private readonly IServiceLink<ICommandSource> _link;
         
 
-        public Commander(IServiceLink<TSource, ICommandSource> link)
+        public Commander(IServiceLink<ICommandSource> link)
         {
             _link = link;
         
@@ -18,12 +21,13 @@ namespace MicroService1
 
         public void SendExec()
         {
-            _link.EndPoint(p => p.Sample).FireAsync(new SampleEvent());
+            _link.EndPoint(p => p.Sample, _source).FireAsync(new SampleEvent());
         }
 
-        public void SendExecute<TStore>(TStore store) where TStore : IDeliveryStore<Command>
+        public void SendExecute(TStore store) 
         {
-            _link.EndPoint(p => p.SampleWithAnswer).Publish(store, new Command());
+            _link.EndPoint(p => p.SampleWithAnswer, _source).GetSender(store, new Command(), null);
+                
         }
     }
 }

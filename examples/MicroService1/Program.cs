@@ -23,19 +23,12 @@ namespace MicroService1
     
     class Program
     {
-        static void Run<TService, TMessage>(Expression<Func<TService, Action<TMessage>>> expression)
-        {
-            var name =
-            ((((expression.Body as UnaryExpression).Operand as MethodCallExpression).Object as ConstantExpression)
-                .Value as MethodInfo).Name;
-        }
+        
         
         static void Main(string[] args)
         {
             var t = new Test<ICommandSource>();
-            t.EPoint(p => p.SampleWithAnswer);
-            Run<ICommandSource, Command>(p => p.Execute);
-            Console.WriteLine("Hello World!");
+        
         }
     }
 }

@@ -5,11 +5,11 @@ namespace ServiceLink
 {
     public interface ISerializer<TTarget>
     {
-        ISerilized<TTarget> Serialize<TMessage>(TMessage message);
-        Result<TMessage> TryDeserialize<TMessage>(ISerilized<TTarget> serilized);
+        ISerialized<TTarget> Serialize<TMessage>(TMessage message);
+        Result<TMessage> TryDeserialize<TMessage>(ISerialized<TTarget> serialized);
     }
 
-    public interface ISerilized<out TTarget>
+    public interface ISerialized<out TTarget>
     {
         ContentType ContentType { get; }
         EncodedType Type { get; }
@@ -52,8 +52,5 @@ namespace ServiceLink
             => new ContentType(contentType);
     }
 
-    public interface ISerializerSelector<TTarget>
-    {
-        ISerializer<TTarget> Select<TMessage>(EndPointInfo info);
-    }
+    
 }
