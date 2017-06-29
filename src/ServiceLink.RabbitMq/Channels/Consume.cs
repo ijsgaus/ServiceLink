@@ -12,36 +12,36 @@ namespace ServiceLink.RabbitMq.Channels
 {
     internal static class Consume
     {
-        public static Func<bool, IObservable<IAck<TMessage>>> MakeConnect<TMessage>(ILogger logger,
+        public static IObservable<IAck<TMessage>> MakeConnect<TMessage>(ILogger logger,
             ISerializer<byte[]> serializer,
-            Func<bool, ILinkConsumer> consumerFactory)
-            => separate =>
-            {
-                return Observable.Create(ToObservable<TMessage>(logger, p => consumerFactory(separate),
-                    serializer));
-            };
-        
-        
-        
-        
-        private static Func<Task> ReceiveLoop<TMessage>(ILogger logger, IObserver<IAck<TMessage>> observer, 
-            ILinkConsumer consumer, CancellationToken cancellation, ISerializer<byte[]> serializer)
-        => async () =>
+            Func<ILinkConsumer> consumerFactory, AckConfirmer confirmer)
         {
-            logger.LogTrace("Receive loop started");
-            while (!cancellation.IsCancellationRequested)
-            {
-                var msg = await consumer.GetMessageAsync<byte[]>(cancellation);
-                logger.LogTrace("Message recieved {@message}", msg);
-                var serialized = SerializedFromMessage(msg);
-                serializer.TryDeserialize<TMessage>(serialized)
-                    .Match(p =>  observer.OnNext(CreateAck(p, ConfirmByAck(logger, msg))), ex =>
-                    {
-                        msg.NackAsync();
-                        logger.LogWarning(0, ex, "On deserialize {@message} to type {type}", msg, typeof(TMessage));
-                    });
-            }
+            return Observable.Create(ToObservable<TMessage>(logger, consumerFactory,
+                serializer, confirmer));
         }
+
+        public delegate Action<ILogger, AckKind> AckConfirmer(ILinkMessage<byte[]> message);
+
+
+        private static Func<Task> ReceiveLoop<TMessage>(ILogger logger, Action<IAck<TMessage>> onNext,
+            ILinkConsumer consumer, CancellationToken cancellation, ISerializer<byte[]> serializer,
+            AckConfirmer confirm)
+            => async () =>
+            {
+                logger.LogTrace("Receive loop started");
+                while (!cancellation.IsCancellationRequested)
+                {
+                    var msg = await consumer.GetMessageAsync<byte[]>(cancellation);
+                    logger.With("@message", msg).LogTrace("Message recieved");
+                    var serialized = SerializedFromMessage(msg);
+                    serializer.TryDeserialize<TMessage>(serialized)
+                        .Match(p => onNext(CreateAck(p, ack => confirm(msg)(logger, ack))), ex =>
+                        {
+                            msg.NackAsync();
+                            logger.LogWarning(0, ex, "On deserialize {@message} to type {type}", msg, typeof(TMessage));
+                        });
+                }
+            };
 
         private static Serialized<byte[]> SerializedFromMessage(ILinkMessage<byte[]> msg)
         {
@@ -54,11 +54,13 @@ namespace ServiceLink.RabbitMq.Channels
             return new Ack<TMessage>(message, confirm);
         }
 
-        private static Action<AckKind> ConfirmByAck(ILogger logger, ILinkMessage<byte[]> msg)
+
+        public static Action<ILogger, AckKind> ConfirmByAck(ILinkMessage<byte[]> msg)
         {
-            return ack =>
+            return (logger, ack) =>
             {
-                logger.LogTrace("Message {ack} {@message}", ack, msg);
+                
+                logger.With(("ack", ack), ("@message", msg)).LogTrace("Message acknowledged");
                 switch (ack)
                 {
                     case AckKind.Ack:
@@ -86,12 +88,12 @@ namespace ServiceLink.RabbitMq.Channels
             };
 
         private static Func<IObserver<IAck<TMessage>>, IDisposable> ToObservable<TMessage>(
-             ILogger logger, Func<ILinkConsumer> consumerFactory, ISerializer<byte[]> serializer)
+             ILogger logger, Func<ILinkConsumer> consumerFactory, ISerializer<byte[]> serializer, AckConfirmer confirmer)
             => observer =>
             {
                 var cancellation = new CancellationDisposable();
                 var consumer = consumerFactory();
-                var task = ReceiveLoop(logger, observer, consumer, cancellation.Token, serializer)();
+                var task = ReceiveLoop<TMessage>(logger, p => observer.OnNext(p), consumer, cancellation.Token, serializer, confirmer)();
                 return Disposable.Create(StopLoop(cancellation, task, consumer, logger));
             };
 

@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 
 namespace ServiceLink.Metadata
 {
@@ -9,5 +10,6 @@ namespace ServiceLink.Metadata
         public string EndpointName { get; }
         public MemberInfo Contract { get; }
         public ISerializer<byte[]> Serializer { get; }
+        public Guid? DeliveryId { get; } 
     }
 }

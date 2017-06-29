@@ -40,13 +40,15 @@ namespace ServiceLink.RabbitMq
                 _configure, this, parameters);
         }
 
-        ILinkConsumer ILinkOwner.CreateConsumer(Func<ILinkTopologyConfig, Task<ILinkQueue>> topologyConfiguration, Action<ILinkConsumerConfigurationBuilder> config)
-            => _link.CreateConsumer(topologyConfiguration, config: config)
+        ILinkConsumer ILinkOwner.CreateConsumer(Func<ILinkTopologyConfig, Task<ILinkQueue>> topologyConfiguration,
+            Action<ILinkConsumerConfigurationBuilder> config)
+            => _link.CreateConsumer(topologyConfiguration, config: config);
     }
 
     public interface IEndpointConfigure
     {
         EventParameters ConfigureEvent(EventParameters parameters, EndPointParams info);
+        CommandParameters ConfigureCommand(CommandParameters prm, EndPointParams info);
     }
 
     [AttributeUsage(AttributeTargets.Interface | AttributeTargets.Field | AttributeTargets.Property)]
