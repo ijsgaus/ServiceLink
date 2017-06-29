@@ -1,6 +1,6 @@
 ﻿namespace ServiceLink
 {
-    public enum Ack
+    public enum AckKind
     {
         Ack,
         Nack,

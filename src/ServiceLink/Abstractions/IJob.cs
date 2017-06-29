@@ -2,9 +2,9 @@
 
 namespace ServiceLink
 {
-    public interface IJob<out TArgs, in TResult>
+    public interface IJob<out TArgs, TResult>
     {
         TArgs Argument { get; }
-        Action<TResult> Return { get; }
+        Action<Return<TResult>> Return { get; }
     }
 }

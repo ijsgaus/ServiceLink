@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using ServiceLink.Exceptions;
 
-namespace ServiceLink.Monads
+namespace ServiceLink
 {
     public class ResultJsonConverter : JsonConverter
     {

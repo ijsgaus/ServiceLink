@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace ServiceLink
 {
-    public interface IEventPoint<TMessage, TStore> : IEventPoint<TMessage>
+    public interface INotifyPoint<TMessage, TStore> : INotifyPoint<TMessage>
         where TStore : IDeliveryStore
     {
         IStoreHolder<TStore> StoreHolder { get; }
@@ -12,7 +12,7 @@ namespace ServiceLink
         Action GetPublisher(TStore store, TMessage message, TimeSpan? timeout = null);
     }
 
-    public interface IEventPoint<T>
+    public interface INotifyPoint<T>
     {
         IHolder Holder { get; }
         

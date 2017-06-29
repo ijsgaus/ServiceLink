@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace ServiceLink.Transport
 {
-    public interface ITransportEventPoint<TMessage>
+    public interface INotifyTransport<TMessage>
     {
         Func<CancellationToken, Task> PrepareSend(TMessage message);
         IObservable<IAck<TMessage>> Connect(bool separate);

@@ -1,9 +1,9 @@
 ﻿namespace ServiceLink
 {
-    public interface IAnswer<out TArgs, out TResult, out TStore>
+    public interface IAnswer<out TArgs, TResult, out TStore>
     {
         TArgs Argument { get; }
-        TResult Result { get; }
+        Result<TResult> Result { get; }
         TStore Store { get; }
     }
 }

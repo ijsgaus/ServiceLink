@@ -7,8 +7,8 @@ namespace ServiceLink
     public interface IServiceLink<TService>
         where TService : class
     {
-        IEventPoint<TMessage> EndPoint<TMessage>(Expression<Func<TService, IEvent<TMessage>>> selector, IHolder holder);
-        IEventPoint<TMessage, TStore> EndPoint<TMessage, TStore>(Expression<Func<TService, IEvent<TMessage>>> selector, IStoreHolder<TStore> holder) 
+        INotifyPoint<TMessage> EndPoint<TMessage>(Expression<Func<TService, INotify<TMessage>>> selector, IHolder holder);
+        INotifyPoint<TMessage, TStore> EndPoint<TMessage, TStore>(Expression<Func<TService, INotify<TMessage>>> selector, IStoreHolder<TStore> holder) 
             where TStore : IDeliveryStore;
 
         ICommandPoint<TCommand> EndPoint<TCommand>(Expression<Func<TService, ICommand<TCommand>>> selector, IHolder holder);

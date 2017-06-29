@@ -2,7 +2,7 @@
 using JetBrains.Annotations;
 using Newtonsoft.Json;
 
-namespace ServiceLink.Monads
+namespace ServiceLink
 {
     [JsonConverter(typeof(ResultJsonConverter))]
     public abstract class Result<T> : IEquatable<Result<T>>

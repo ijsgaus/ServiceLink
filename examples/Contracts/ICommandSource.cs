@@ -6,7 +6,7 @@ namespace Contracts
 {
     public interface ICommandSource
     {
-        IEvent<SampleEvent> Sample { get; }
+        INotify<SampleEvent> Sample { get; }
         
         
         ICallable<Command, int> SampleWithAnswer { get; }

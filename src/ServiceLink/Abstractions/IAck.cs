@@ -5,6 +5,6 @@ namespace ServiceLink
     public interface IAck<out T>
     {
         T Message { get; }
-        Action<Ack> Confirm { get; }
+        Action<AckKind> Confirm { get; }
     }
 }

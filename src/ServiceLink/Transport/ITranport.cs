@@ -4,6 +4,6 @@ namespace ServiceLink.Transport
 {
     public interface ITranport
     {
-        ITransportEventPoint<TMessage> EndPoint<TMessage>(IHolder holder, EndPointParams parameters);
+        INotifyTransport<TMessage> EndPoint<TMessage>(EndPointParams parameters);
     }
 }
