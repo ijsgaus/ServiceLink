@@ -7,43 +7,73 @@ using RabbitLink.Producer;
 using RabbitLink.Topology;
 using ServiceLink.Metadata;
 using ServiceLink.RabbitMq.Channels;
+using ServiceLink.RabbitMq.Topology;
 using ServiceLink.Transport;
 
 namespace ServiceLink.RabbitMq
 {
     internal class NotifyTransport<TMessage> : INotifyTransport<TMessage>
     {
-        public NotifyTransport(ILogger<NotifyTransport<TMessage>> logger, IEndpointConfigure configure,
+        private readonly ProducerParams _producerParams;
+        private readonly Lazy<ILinkProducer> _lazyProducer;
+        
+        public NotifyTransport(ILogger logger, ITransportConfiguration configuration,
             ILinkOwner owner, EndPointParams endPoint)
         {
             _logger = logger;
-            var prm = new EventParameters(endPoint.ServiceName, endPoint.EndpointName, endPoint.Serializer, 
+            _producerParams = configuration.GetProducerConfig(endPoint);
+            _lazyProducer = new Lazy<ILinkProducer>(() => owner.GetOrAddProducer(_producerParams));
+            
+            /*var prm = new EventParameters(endPoint.ServiceName, endPoint.EndpointName, endPoint.Serializer, 
                 "{1}.{2}.{0}.{3}", "{1}.{2}.{0}", 1, true);
-            prm = configure.ConfigureEvent(prm, endPoint);
+            prm = configure.ConfigureEvent(prm, endPoint);*/
 
-            var factory = ConsumerFactory(owner, prm, endPoint);
-            
-            _consume = MakeConsume(logger, prm.Serializer, factory);
-            
-            _produce = Produce.PrepareSend<TMessage>(logger, prm.Serializer, 
-                new Lazy<ILinkProducer>(owner.ProducerFactory(prm.ExchangeName, prm.ProducerConfirmMode, LinkExchangeType.Direct)),
-                pp =>
-                {
-                    pp.MessageProperties.AppId = endPoint.HolderName;
-                    pp.PublishProperties.RoutingKey = prm.RoutingKey;
-                    return pp;
-                });
+            //var factory = ConsumerFactory(owner, prm, endPoint);
+
+            // _consume = MakeConsume(logger, prm.Serializer, factory);
+
+            //_produce = Produce.PrepareSend<TMessage>(logger, prm.Serializer, 
+            //    new Lazy<ILinkProducer>(owner.ProducerFactory(prm.ExchangeName, prm.ProducerConfirmMode, LinkExchangeType.Direct)),
+            //    pp =>
+            //    {
+            //        pp.MessageProperties.AppId = endPoint.HolderName;
+            //        pp.PublishProperties.RoutingKey = prm.RoutingKey;
+            //        return pp;
+            //    });
         }
+
         
-        public Func<CancellationToken, Task> PrepareSend(TMessage message) => _produce(message);
+        
+        public Func<CancellationToken, Task> PrepareSend(TMessage message)
+        {
+            var log = _logger.With("@channel", _producerParams).With("@message", message);
+            Func<CancellationToken, Task> Prepare()
+            {
+                var producer = _lazyProducer.Value;
+                var serialized = _producerParams.Serializer.Serialize(message);
+                var publishParams = _producerParams.PublishConfigure.Configure(message, _producerParams, null).ApplySerialization(serialized);
+                
+                Task Publish(CancellationToken token)
+                {
+                    var task = producer.PublishAsync(serialized.Data, publishParams.MessageProperties,
+                        publishParams.PublishProperties, token);
+                    task.LogResult(log, LogEvents.Publish);
+                    return task;
+                }
+
+                return Publish;
+            }
+
+            return log.WithLog(Prepare, LogEvents.PreparePublish);
+        }
 
         public IObservable<IAck<TMessage>> Connect(bool separate) => _consume(separate);
         
         
-        private readonly ILogger<NotifyTransport<TMessage>> _logger;
-        private readonly Func<bool, IObservable<IAck<TMessage>>> _consume;
-        private readonly Func<TMessage, Func<CancellationToken, Task>> _produce;
+        private readonly ILogger _logger;
+        
 
+        /*
         private static Func<bool, ILinkConsumer> ConsumerFactory(ILinkOwner owner, EventParameters prm,
             EndPointParams endPoint)
             => separate =>
@@ -73,5 +103,6 @@ namespace ServiceLink.RabbitMq
         private static Func<bool, IObservable<IAck<TMessage>>> MakeConsume(ILogger logger, ISerializer<byte[]> serializer, Func<bool, ILinkConsumer> factory)
             => separate => Consume.MakeConnect<TMessage>(logger, serializer, 
                 () => factory(separate), Consume.ConfirmByAck);
+        */
     }
 }

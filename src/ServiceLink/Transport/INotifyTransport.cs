@@ -7,6 +7,6 @@ namespace ServiceLink.Transport
     public interface INotifyTransport<TMessage>
     {
         Func<CancellationToken, Task> PrepareSend(TMessage message);
-        IObservable<IAck<TMessage>> Connect(bool separate);
+        IObservable<IAck<TMessage>> Connect(ReceiveParams @params);
     }
 }

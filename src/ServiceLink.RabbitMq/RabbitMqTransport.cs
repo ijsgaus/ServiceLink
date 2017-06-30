@@ -12,6 +12,7 @@ using RabbitLink.Messaging;
 using RabbitLink.Producer;
 using RabbitLink.Topology;
 using ServiceLink.Metadata;
+using ServiceLink.RabbitMq.Topology;
 using ServiceLink.Transport;
 
 namespace ServiceLink.RabbitMq
@@ -20,15 +21,14 @@ namespace ServiceLink.RabbitMq
     {
         private readonly Link _link;
         private readonly ConcurrentDictionary<(string, bool), ILinkProducer> _producers = new ConcurrentDictionary<(string, bool), ILinkProducer>();
-        private readonly IEndpointConfigure _configure;
+        private readonly ITransportConfiguration _configuration;
         private readonly ILoggerFactory _loggerFactory;
 
 
-        ILinkProducer ILinkOwner.GetOrAddProducer(string exchangeName, bool confirmMode, LinkExchangeType exchangeType)
+        ILinkProducer ILinkOwner.GetOrAddProducer(ProducerParams @params)
         {
-            return _producers.GetOrAdd((exchangeName, confirmMode), _link.CreateProducer(cfg =>
-                    cfg.ExchangeDeclare(exchangeName, exchangeType),
-                config: bld => bld.ConfirmsMode(confirmMode)));
+            return _producers.GetOrAdd((@params.ExchangeName, @params.ConfirmMode), 
+                _ => @params.Configure(_link, @params));
         }
 
 
@@ -45,32 +45,7 @@ namespace ServiceLink.RabbitMq
             => _link.CreateConsumer(topologyConfiguration, config: config);
     }
 
-    public interface IEndpointConfigure
-    {
-        EventParameters ConfigureEvent(EventParameters parameters, EndPointParams info);
-        CommandParameters ConfigureCommand(CommandParameters prm, EndPointParams info);
-    }
-
-    [AttributeUsage(AttributeTargets.Interface | AttributeTargets.Field | AttributeTargets.Property)]
-    public class ExchangeNameAttribute : Attribute
-    {
-        public ExchangeNameAttribute(string name)
-        {
-            Name = name;
-        }
-
-        public string Name { get; }
-        
-    }
     
-    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-    public class RoutingKeyAttribute : Attribute
-    {
-        public RoutingKeyAttribute(string key)
-        {
-            Key = key;
-        }
 
-        public string Key { get; }
-    }
+    
 }

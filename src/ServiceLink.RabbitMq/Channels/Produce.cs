@@ -2,36 +2,22 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using RabbitLink;
 using RabbitLink.Producer;
 using RabbitLink.Topology;
+using ServiceLink.RabbitMq.Topology;
 
 namespace ServiceLink.RabbitMq
 {
     internal static class Produce
     {
-        private static void OnPublishFinished<TMessage>(TMessage message, ILogger logger, Task task)
-        {
-            using (logger.BeginScope(message))
-            {
-                if (task.IsFaulted)
-                    logger.LogError(0, task.Exception, "Publishing error");
-                else if (task.IsCanceled)
-                    logger.LogTrace("Cancelled");
-                else
-                    logger.LogTrace("Success");
-            }
-        }
 
-        /// <summary>
-        /// Carrieng only
-        /// </summary>
-        /// <param name="message">message</param>
-        /// <param name="logger">logger</param>
-        /// <typeparam name="TMessage">message type</typeparam>
-        /// <returns>carry version</returns>
-        private static Action<Task> OnPublishFinished<TMessage>(TMessage message, ILogger logger)
-            => t => OnPublishFinished(message, logger, t);
+        public static ILinkProducer CommonProducerConfigure(Link link, ProducerParams @params)
+            => link.CreateProducer(cfg => cfg.ExchangeDeclare(@params.ExchangeName, LinkExchangeType.Direct),
+                config: bld => bld.ConfirmsMode(@params.ConfirmMode));
 
+        
+        
         public static Func<TMessage, Func<CancellationToken, Task>> PrepareSend<TMessage>(ILogger logger,
             ISerializer<byte[]> serializer,
             Lazy<ILinkProducer> producerLazy, Func<ProduceParams, ProduceParams> paramsCorrector)

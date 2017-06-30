@@ -7,7 +7,7 @@ namespace ServiceLink.Transport
 {
     public interface ICommandTransport<TCommand>
     {
-        Func<CancellationToken, Task> PrepareSend(TCommand message);
+        Func<CancellationToken, Task> PrepareSend(TCommand message, SendParams sendParams);
         IObservable<IAck<TCommand>> Connect();
         IObservable<IAck<Unit>> GetAnswer();
     }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reactive.Concurrency;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,16 +13,16 @@ namespace ServiceLink
         Action GetPublisher(TStore store, TMessage message, TimeSpan? timeout = null);
     }
 
-    public interface INotifyPoint<T>
+    public interface INotifyPoint<TMessage>
     {
         IHolder Holder { get; }
         
-        void FireAndForget(T message);
+        void FireAndForget(TMessage message);
 
-        Task FireAsync(T message, CancellationToken? token = null);
+        Task FireAsync(TMessage message, CancellationToken? token = null);
         
-        IObservable<IAck<T>> Listen();
+        IDisposable Listen(IConsumer<TMessage> consumer, IScheduler scheduler = null);
         
-        IObservable<IAck<T>> Connect();
+        IDisposable Connect(IConsumer<TMessage> consumer, IScheduler scheduler = null);
     }
 }

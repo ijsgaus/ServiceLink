@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using ServiceLink.Metadata;
+using ServiceLink.Transport;
 
 namespace ServiceLink.RabbitMq
 {
