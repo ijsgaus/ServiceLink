@@ -2,11 +2,6 @@ namespace ServiceLink
 open System
 open System.Runtime.CompilerServices
 
-type AckKind =
-    | Ack = 0
-    | Nack = 1
-    | Requeue = 2   
-
 type EncodedType = EncodedType of string
 
 type ContentType = ContentType of string
@@ -19,17 +14,55 @@ type Serialized<'t> = {
 
 type RawSerialized = Serialized<byte array>
 
-type IAck<'t> =
-    abstract Message : 't
-    abstract Confirm : Action<AckKind>
+type TextSerialized = Serialized<string>
 
-type Ack<'t> = 
-    {
-        Message : 't
-        Confirm : AckKind -> unit
-    }
-    interface IAck<'t> with
-        member __.Message = __.Message
-        member __.Confirm = Action<_>(__.Confirm)
+
+type EndpointId = EndpointId of string
+type EndpointKind = 
+    | Notify
+    | Cmd
+    | Call
+    
+
+
+type IEndpoint = 
+    abstract Id : EndpointId
+    abstract Kind : EndpointKind
+    abstract InType : Type
+    abstract OutType : Type
+
+type Notification<'message> = 
+    | Notification of EndpointId
+    interface IEndpoint with
+        member __.Id =  let (Notification id) = __ in id
+        member __.Kind = Notify
+        member __.InType = typeof<'message>
+        member __.OutType = typeof<unit>
+        
+type Command<'command> = 
+    | Command of EndpointId
+    interface IEndpoint with
+        member __.Id =  let (Command id) = __ in id
+        member __.Kind = Cmd
+        member __.InType = typeof<'command>
+        member __.OutType = typeof<unit>
+        
+        
+type Callable<'args, 'result> = 
+    | Callable of EndpointId
+    interface IEndpoint with
+        member __.Id =  let (Callable id) = __ in id
+        member __.Kind = Call
+        member __.InType = typeof<'args>
+        member __.OutType = typeof<'result>
+
+
+type ServiceDescription = IEndpoint list
+
+type ServiceLink = ServiceLink
+
+module ServiceLink =
+    let 
+    
 
 
