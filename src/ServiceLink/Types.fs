@@ -1,6 +1,7 @@
 namespace ServiceLink
 open System
 open System.Runtime.CompilerServices
+open System.Reflection
 
 type EncodedType = EncodedType of string
 
@@ -18,51 +19,63 @@ type TextSerialized = Serialized<string>
 
 
 type EndpointId = EndpointId of string
-type EndpointKind = 
-    | Notify
-    | Cmd
-    | Call
+
     
 
 
-type IEndpoint = 
+type IEndpointMember = 
     abstract Id : EndpointId
     abstract Kind : EndpointKind
     abstract InType : Type
     abstract OutType : Type
+    abstract Member : MemberInfo
+    
 
-type Notification<'message> = 
-    | Notification of EndpointId
-    interface IEndpoint with
-        member __.Id =  let (Notification id) = __ in id
+    
+    
+    
+type Notification<'service, 'message> = 
+    | Notification of MemberInfo
+    interface IEndpointMember with
+        member __.Id =  let (Notification memb) = __ in EndpointId memb.Name
         member __.Kind = Notify
         member __.InType = typeof<'message>
         member __.OutType = typeof<unit>
+        member __.Member = let (Notification mem) = __ in mem
         
-type Command<'command> = 
-    | Command of EndpointId
-    interface IEndpoint with
-        member __.Id =  let (Command id) = __ in id
+type Command<'service, 'command> = 
+    | Command of MemberInfo
+    interface IEndpointMember with
+        member __.Id =  let (Command memb) = __ in EndpointId memb.Name
         member __.Kind = Cmd
         member __.InType = typeof<'command>
         member __.OutType = typeof<unit>
+        member __.Member = let (Command mem) = __ in mem
         
         
-type Callable<'args, 'result> = 
-    | Callable of EndpointId
-    interface IEndpoint with
-        member __.Id =  let (Callable id) = __ in id
+type Callable<'service, 'args, 'result> = 
+    | Callable of MemberInfo
+    interface IEndpointMember with
+        member __.Id =  let (Callable memb) = __ in EndpointId memb.Name
         member __.Kind = Call
         member __.InType = typeof<'args>
         member __.OutType = typeof<'result>
+        member __.Member = let (Callable mem) = __ in mem
 
 
-type ServiceDescription = IEndpoint list
+
+
+type ITransport = interface end
+
+
+type ServiceDescription = IEndpointMember list
+
+type ServiceLinkConfiguration = ServiceLinkConfiguration
 
 type ServiceLink = ServiceLink
 
-module ServiceLink =
-    let 
+(*module ServiceLink =
+    let*) 
     
 
 

@@ -47,6 +47,12 @@
     <Compile Include="Types.fs" />
     <None Include="Script.fsx" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ServiceLink.Markers\ServiceLink.Markers.Full.fsproj">
+      <Project>{d0893f0e-039a-4ff4-ba01-548706861d9e}</Project>
+      <Name>ServiceLink.Markers.Full</Name>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
   </PropertyGroup>
