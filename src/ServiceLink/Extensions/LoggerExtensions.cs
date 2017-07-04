@@ -22,6 +22,7 @@ namespace ServiceLink
             catch (Exception ex)
             {
                 logger.LogError(eventId, ex, "When executing");
+                throw;
             }
         }
         

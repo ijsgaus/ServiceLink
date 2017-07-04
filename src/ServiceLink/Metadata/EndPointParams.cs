@@ -4,11 +4,11 @@ namespace ServiceLink.Metadata
 {
     public class EndPointParams
     {
-        public EndPointParams(EndPointType type, string holderName, string serviceName, string endpointName,
+        public EndPointParams(EndPointType type, IHolder holder, string serviceName, string endpointName,
             MemberInfo contract, ISerializer<byte[]> serializer)
         {
             Type = type;
-            HolderName = holderName;
+            Holder = holder;
             ServiceName = serviceName;
             EndpointName = endpointName;
             Contract = contract;
@@ -16,7 +16,7 @@ namespace ServiceLink.Metadata
         }
 
         public EndPointType Type { get; }
-        public string HolderName { get; }
+        public IHolder Holder { get; }
         public string ServiceName { get; }
         public string EndpointName { get; }
         public MemberInfo Contract { get; }

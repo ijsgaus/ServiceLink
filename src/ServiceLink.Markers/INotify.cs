@@ -1,7 +1,8 @@
 ﻿namespace ServiceLink.Markers
 {
-    public interface INotify<in TMessage>
+    // ReSharper disable once UnusedTypeParameter
+    public interface INotify<TMessage>
     {
-        T Configure<T>(T current, TMessage message);
+        
     }
 }

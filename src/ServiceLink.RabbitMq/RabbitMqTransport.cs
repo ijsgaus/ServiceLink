@@ -36,7 +36,7 @@ namespace ServiceLink.RabbitMq
         {
             if (parameters == null) throw new ArgumentNullException(nameof(parameters));
 
-            return new NotifyTransport<TMessage>(_loggerFactory.CreateLogger<NotifyTransport<TMessage>>(),
+            return new NotifyPoint<TMessage>(_loggerFactory.CreateLogger<NotifyPoint<TMessage>>(),
                 _configure, this, parameters);
         }
 

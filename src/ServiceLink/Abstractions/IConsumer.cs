@@ -4,11 +4,11 @@ namespace ServiceLink
 {
     public interface IConsumer<in TMessage>
     {
-        Task Consume(TMessage message, IConsumeContext context);
+        Task Consume(IConsumeContext<TMessage> context);
     }
 
-    public interface IConsumeContext
+    public interface IConsumeContext<out TMessage>
     {
-        
+        TMessage Message { get; }
     }
 }

@@ -7,7 +7,8 @@ namespace ServiceLink
 {
     public static class TaskExtensions
     {
-        public static void LogResult([NotNull] this Task task, [NotNull] ILogger logger, EventId eventId, string message, params object[] args)
+        public static void LogResult([NotNull] this Task task, [NotNull] ILogger logger, EventId eventId,
+            string message, params object[] args)
         {
             if (task == null) throw new ArgumentNullException(nameof(task));
             if (logger == null) throw new ArgumentNullException(nameof(logger));
@@ -22,11 +23,13 @@ namespace ServiceLink
             });
         }
 
-        public static void LogResult([NotNull] this Task task,[NotNull]  ILogger logger, string message, params object[] args)
+        public static void LogResult([NotNull] this Task task, [NotNull] ILogger logger, string message,
+            params object[] args)
             => task.LogResult(logger, 0, message, args);
-        
-        public static void LogResult([NotNull] this Task task,[NotNull]  ILogger logger, EventId eventId)
+
+        public static void LogResult([NotNull] this Task task, [NotNull] ILogger logger, EventId eventId)
             => task.LogResult(logger, eventId, eventId.Name);
 
 
     }
+}

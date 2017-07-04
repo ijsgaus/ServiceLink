@@ -1,9 +1,12 @@
 using System;
 using System.Linq.Expressions;
+using ServiceLink.Configuration;
 using ServiceLink.Markers;
 
 namespace ServiceLink
 {
+    
+    
     public interface IServiceLink<TService>
         where TService : class
     {
@@ -19,5 +22,12 @@ namespace ServiceLink
         ICallablePoint<TArgs, TResult, TStore> EndPoint<TArgs, TResult, TStore>(Expression<Func<TService, ICallable<TArgs, TResult>>> selector, IStoreHolder<TStore> holder) 
             where TStore : IDeliveryStore;
     }
-    
+
+    public interface IServiceLink
+    {
+        IServiceLink<TService> GetService<TService>() where TService : class;
+        void Configure(LinkConfiguration configuration);
+        void Configure<TService>(LinkConfiguration configuration);
+        IServiceConfigure<TService> Configure<TService>();
+    }
 }

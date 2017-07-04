@@ -12,18 +12,18 @@ using ServiceLink.Transport;
 
 namespace ServiceLink.RabbitMq
 {
-    internal class NotifyTransport<TMessage> : INotifyTransport<TMessage>
+    internal class NotifyPoint<TMessage> : INotifyPoint<TMessage>
     {
         private readonly ProducerParams _producerParams;
         private readonly Lazy<ILinkProducer> _lazyProducer;
         
-        public NotifyTransport(ILogger logger, ITransportConfiguration configuration,
+        public NotifyPoint(ILogger logger, ITransportConfiguration configuration,
             ILinkOwner owner, EndPointParams endPoint)
         {
             _logger = logger;
             _producerParams = configuration.GetProducerConfig(endPoint);
             _lazyProducer = new Lazy<ILinkProducer>(() => owner.GetOrAddProducer(_producerParams));
-            
+            Holder = endPoint.Holder;
             /*var prm = new EventParameters(endPoint.ServiceName, endPoint.EndpointName, endPoint.Serializer, 
                 "{1}.{2}.{0}.{3}", "{1}.{2}.{0}", 1, true);
             prm = configure.ConfigureEvent(prm, endPoint);*/
@@ -42,10 +42,12 @@ namespace ServiceLink.RabbitMq
             //    });
         }
 
-        
-        
-        public Func<CancellationToken, Task> PrepareSend(TMessage message)
+
+        public IHolder Holder { get; }
+
+        public Task FireAsync(TMessage message, CancellationToken? token = null)
         {
+            var tkn = token ?? CancellationToken.None;
             var log = _logger.With("@channel", _producerParams).With("@message", message);
             Func<CancellationToken, Task> Prepare()
             {
@@ -53,10 +55,10 @@ namespace ServiceLink.RabbitMq
                 var serialized = _producerParams.Serializer.Serialize(message);
                 var publishParams = _producerParams.PublishConfigure.Configure(message, _producerParams, null).ApplySerialization(serialized);
                 
-                Task Publish(CancellationToken token)
+                Task Publish(CancellationToken cancellation)
                 {
                     var task = producer.PublishAsync(serialized.Data, publishParams.MessageProperties,
-                        publishParams.PublishProperties, token);
+                        publishParams.PublishProperties, cancellation);
                     task.LogResult(log, LogEvents.Publish);
                     return task;
                 }
@@ -64,7 +66,7 @@ namespace ServiceLink.RabbitMq
                 return Publish;
             }
 
-            return log.WithLog(Prepare, LogEvents.PreparePublish);
+            return log.WithLog(Prepare, LogEvents.PreparePublish)(tkn);
         }
 
         public IObservable<IAck<TMessage>> Connect(bool separate) => _consume(separate);

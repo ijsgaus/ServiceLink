@@ -17,12 +17,12 @@ namespace ServiceLink
     {
         IHolder Holder { get; }
         
-        void FireAndForget(TMessage message);
-
         Task FireAsync(TMessage message, CancellationToken? token = null);
         
-        IDisposable Listen(IConsumer<TMessage> consumer, IScheduler scheduler = null);
-        
-        IDisposable Connect(IConsumer<TMessage> consumer, IScheduler scheduler = null);
+        IDisposable Listen(IConsumer<TMessage> consumer, IExecutor executor = null, IListenOptions options = null);
+    }
+
+    public interface IListenOptions
+    {
     }
 }

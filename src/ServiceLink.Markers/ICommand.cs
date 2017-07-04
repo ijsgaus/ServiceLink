@@ -1,7 +1,8 @@
 ﻿namespace ServiceLink.Markers
 {
-    public interface ICommand<in TCommand>
+    // ReSharper disable once UnusedTypeParameter
+    public interface ICommand<TCommand>
     {
-        T Configure<T>(T current, TCommand command);
+        
     }
 }
