@@ -6,6 +6,7 @@ using RabbitLink;
 using RabbitLink.Producer;
 using RabbitLink.Topology;
 using ServiceLink.RabbitMq.Topology;
+using ServiceLink.Serializers;
 
 namespace ServiceLink.RabbitMq
 {

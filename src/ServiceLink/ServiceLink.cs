@@ -8,11 +8,11 @@ namespace ServiceLink
 {
     public class ServiceLink : IServiceLink
     {
-        private readonly CompositeConfiguration _configuration;
+        private readonly ServiceLinkConfiguration _configuration;
         
         public ServiceLink(LinkConfigure configure)
         {
-            _configuration = new CompositeConfiguration(configure);
+            _configuration = new ServiceLinkConfiguration(configure);
         }
 
         public IServiceLink<TService> GetService<TService>() where TService : class
@@ -37,9 +37,9 @@ namespace ServiceLink
 
         private class ServiceConfigure<TService> : IServiceConfigure<TService>
         {
-            private readonly CompositeConfiguration _configuration;
+            private readonly ServiceLinkConfiguration _configuration;
 
-            public ServiceConfigure(CompositeConfiguration configuration)
+            public ServiceConfigure(ServiceLinkConfiguration configuration)
             {
                 _configuration = configuration;
             }
@@ -52,10 +52,10 @@ namespace ServiceLink
 
         private class NotifyConfiguration<TService, TMessage> : INotifyConfiguration<TService, TMessage>
         {
-            private readonly CompositeConfiguration _configuration;
+            private readonly ServiceLinkConfiguration _configuration;
             private readonly MemberInfo _memberInfo;
 
-            public NotifyConfiguration(CompositeConfiguration configuration, MemberInfo memberInfo)
+            public NotifyConfiguration(ServiceLinkConfiguration configuration, MemberInfo memberInfo)
             {
                 _configuration = configuration;
                 _memberInfo = memberInfo;

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using RabbitLink.Consumer;
 using RabbitLink.Messaging;
+using ServiceLink.Serializers;
 using ServiceLink.Transport;
 
 namespace ServiceLink.RabbitMq.Channels

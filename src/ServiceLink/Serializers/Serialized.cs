@@ -1,8 +1,8 @@
-namespace ServiceLink.Transport
+﻿namespace ServiceLink.Serializers
 {
-    public class Serialized<T> : ISerialized<T>
+    public class Serialized<TTarget>
     {
-        public Serialized(ContentType contentType, EncodedType type, T data)
+        public Serialized(ContentType contentType, EncodedType type, TTarget data)
         {
             ContentType = contentType;
             Type = type;
@@ -11,6 +11,6 @@ namespace ServiceLink.Transport
 
         public ContentType ContentType { get; }
         public EncodedType Type { get; }
-        public T Data { get; }
+        public TTarget Data { get; }
     }
 }

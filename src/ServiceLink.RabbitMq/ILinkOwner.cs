@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using RabbitLink;
 using RabbitLink.Configuration;
 using RabbitLink.Consumer;
 using RabbitLink.Producer;
@@ -12,6 +13,6 @@ namespace ServiceLink.RabbitMq
     {
         ILinkProducer GetOrAddProducer(ProducerParams @params);
 
-        ILinkConsumer CreateConsumer(Func<ILinkTopologyConfig, Task<ILinkQueue>> topologyConfiguration, Action<ILinkConsumerConfigurationBuilder> config);
+        //ILinkConsumer CreateConsumer(Func<Link, ILinkConsumer> create);
     }
 }

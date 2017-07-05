@@ -1,9 +1,6 @@
-﻿using System;
-using System.Reflection;
-using ServiceLink.Metadata;
+﻿using ServiceLink.Endpoints;
 
 namespace ServiceLink.Configuration
 {
-    public delegate EndPointParams LinkConfiguration(EndPointType endpointType, Type serviceType, Type argType,
-        Type resType, MemberInfo member, IHolder holder, LinkConfigure config);
+    public delegate LinkEndpointConfig LinkConfiguration(EndpointInfoBase endpoint, IHolder holder, LinkConfigure config);
 }

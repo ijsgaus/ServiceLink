@@ -1,4 +1,5 @@
 ﻿using RabbitLink.Messaging;
+using ServiceLink.Serializers;
 using ServiceLink.Transport;
 
 namespace ServiceLink.RabbitMq.Topology
@@ -19,7 +20,7 @@ namespace ServiceLink.RabbitMq.Topology
         public LinkMessageProperties MessageProperties { get; }
         public LinkPublishProperties PublishProperties { get; }
 
-        public PublishParams ApplySerialization(ISerialized<byte[]> serialized)
+        public PublishParams ApplySerialization(Serialized<byte[]> serialized)
         {
             MessageProperties.ContentType = serialized.ContentType.ToString();
             MessageProperties.Type = serialized.Type.ToString();

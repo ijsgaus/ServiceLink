@@ -19,6 +19,10 @@ Project("{57E79E34-C941-43BD-BB30-F02CDC7D930F}") = "MicroService1", "examples\M
 EndProject
 Project("{2C06F3C5-54E0-4493-9CC9-50EF827078A1}") = "ServiceLink.Markers", "src\ServiceLink.Markers\ServiceLink.Markers.csproj", "{F121E310-46ED-4446-9CE0-742BFC103BC2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceLink.RabbitMq.Markers", "src\ServiceLink.RabbitMq.Markers\ServiceLink.RabbitMq.Markers.csproj", "{FD19BF05-99AE-419C-AC83-DA4F686D5E6B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceLink.Linq2Db", "src\ServiceLink.Linq2Db\ServiceLink.Linq2Db.csproj", "{D40C367F-F267-47D1-932B-7EFE66DF2235}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +49,14 @@ Global
 		{F121E310-46ED-4446-9CE0-742BFC103BC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F121E310-46ED-4446-9CE0-742BFC103BC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F121E310-46ED-4446-9CE0-742BFC103BC2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FD19BF05-99AE-419C-AC83-DA4F686D5E6B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FD19BF05-99AE-419C-AC83-DA4F686D5E6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FD19BF05-99AE-419C-AC83-DA4F686D5E6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FD19BF05-99AE-419C-AC83-DA4F686D5E6B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D40C367F-F267-47D1-932B-7EFE66DF2235}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D40C367F-F267-47D1-932B-7EFE66DF2235}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D40C367F-F267-47D1-932B-7EFE66DF2235}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D40C367F-F267-47D1-932B-7EFE66DF2235}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -55,5 +67,7 @@ Global
 		{BE7F1322-AB70-4DC1-9E2B-FB1A992B5E67} = {0E355198-7B03-4517-AAB1-21A68B2DD66D}
 		{93147ACB-382A-4DB6-A8E7-8D5804CAE813} = {0E355198-7B03-4517-AAB1-21A68B2DD66D}
 		{F121E310-46ED-4446-9CE0-742BFC103BC2} = {AE05B580-F522-436A-8E0E-B6A84CA9FC6A}
+		{FD19BF05-99AE-419C-AC83-DA4F686D5E6B} = {AE05B580-F522-436A-8E0E-B6A84CA9FC6A}
+		{D40C367F-F267-47D1-932B-7EFE66DF2235} = {AE05B580-F522-436A-8E0E-B6A84CA9FC6A}
 	EndGlobalSection
 EndGlobal

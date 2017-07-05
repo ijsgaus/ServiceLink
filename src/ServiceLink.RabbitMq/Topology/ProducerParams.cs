@@ -1,22 +1,21 @@
 ﻿using System;
 using JetBrains.Annotations;
 using ServiceLink.Metadata;
+using ServiceLink.Serializers;
 
 namespace ServiceLink.RabbitMq.Topology
 {
-    public class ProducerParams : ChannelParams
+    public class ProducerParams 
     {
-        public ProducerParams([NotNull] EndPointParams endPoint, [NotNull] ISerializer<byte[]> serializer,
+        public ProducerParams(
             [NotNull] string exchangeName,
-            [CanBeNull] string routingKey, bool confirmMode, [NotNull] IPublishConfigure publishConfigure,
-            ProducerConfigure configure = null) : base(endPoint, serializer)
+            bool confirmMode, [NotNull] PublishConfigure publishConfigure,
+            [NotNull] ProducerConfigure configure) 
         {
-
             ExchangeName = exchangeName ?? throw new ArgumentNullException(nameof(exchangeName));
-            RoutingKey = routingKey;
             ConfirmMode = confirmMode;
             PublishConfigure = publishConfigure ?? throw new ArgumentNullException(nameof(publishConfigure));
-            Configure = configure ?? Produce.CommonProducerConfigure;
+            Configure = configure ?? throw new ArgumentNullException(nameof(configure));
         }
 
         [NotNull]
@@ -24,13 +23,10 @@ namespace ServiceLink.RabbitMq.Topology
         
         public bool ConfirmMode { get; }
         
-        [CanBeNull]
-        public string RoutingKey { get; }
-        
         [NotNull]
         public ProducerConfigure Configure { get; }
         
         [NotNull]
-        public IPublishConfigure PublishConfigure { get; }
+        public PublishConfigure PublishConfigure { get; }
     }
 }

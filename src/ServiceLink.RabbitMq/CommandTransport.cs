@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using RabbitLink.Producer;
 using RabbitLink.Topology;
 using ServiceLink.Metadata;
+using ServiceLink.Serializers;
 using ServiceLink.Transport;
 
 namespace ServiceLink.RabbitMq
