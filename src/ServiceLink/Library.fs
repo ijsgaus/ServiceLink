@@ -1,4 +1,4 @@
-namespace ServiceLink.RabbitMq
+namespace ServiceLink
 
 module Say =
     let hello name =
