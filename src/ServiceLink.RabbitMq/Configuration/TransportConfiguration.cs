@@ -54,10 +54,55 @@ namespace ServiceLink.RabbitMq.Configuration
         {
             var typeInfo = endpoint.Info.ServiceType.GetTypeInfo();
             var (exchangeName, _) = FindExchange(typeInfo, endpoint.Info.Member, endpoint.ServiceName, LinkExchangeType.Direct);
-            
+            var queueFormat = FindQueueName(typeInfo, endpoint.Info.Member, "{exchange}.{holder}");
+            queueFormat = queueFormat.Replace("{exchange}", exchangeName);
+            queueFormat = queueFormat.Replace("{holder}", endpoint.Holder);
+            if (endpoint.SubscribeName != null)
+                queueFormat = $"{queueFormat}.{endpoint.SubscribeName}";
+            var routingKey = FindRoutingKey(typeInfo, endpoint.Info.Member, endpoint.EndpointName);
+            TimeSpan? expires;
+            bool isTemporary;
+            if (endpoint.ObserveKind == NotifyObserveKind.PerName)
+            {
+                isTemporary = false;
+                expires = FindExpiration(typeInfo, endpoint.Info.Member, null, false);
+            }
+            else
+            {
+                isTemporary = true;
+                expires = FindExpiration(typeInfo, endpoint.Info.Member, TimeSpan.FromMinutes(3), true);
+            }
+            return new NotifyQueueConfig(exchangeName, queueFormat, isTemporary, expires, endpoint.PrefetchCount, routingKey, false, false).CreateConsumer;
         }
 
-        private (string, LinkExchangeType) FindExchange(TypeInfo service, MemberInfo member, string defaultName, LinkExchangeType defaultType)
+        private static TimeSpan? FindExpiration(TypeInfo service, MemberInfo member, TimeSpan? @default, bool isSession)
+        {
+            if (isSession)
+            {
+                var attr = member.GetCustomAttribute<SessionQueueExpiresAttribute>();
+                if (attr != null)
+                    @default = attr.Lifetime;
+            }
+            else
+            {
+                var attr = member.GetCustomAttribute<QueueExpiresAttribute>();
+                if (attr != null)
+                    @default = attr.Lifetime;
+            }
+            return @default;
+        }
+        
+        private static string FindQueueName(TypeInfo service, MemberInfo member, string @default)
+        {
+            var attr = member.GetCustomAttribute<QueueNameAttribute>();
+            if (attr != null)
+            {
+                @default = attr.Name;
+            }
+            return @default;
+        }
+        
+        private static (string, LinkExchangeType) FindExchange(TypeInfo service, MemberInfo member, string defaultName, LinkExchangeType defaultType)
         {
             var exchangeAttr = service.GetCustomAttribute<ExchangeAttribute>();
             if (exchangeAttr != null)

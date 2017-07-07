@@ -9,6 +9,7 @@ namespace ServiceLink.Endpoints
         public NotifyInfo Notify { get; }
         public NotifyObserveKind ObserveKind { get; }
         public string SubscribeName { get; }
+        public ushort PrefetchCount { get; }
     }
 
     public enum NotifyObserveKind
