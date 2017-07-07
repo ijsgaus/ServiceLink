@@ -1,11 +1,15 @@
 ﻿<Project Sdk="FSharp.NET.Sdk;Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard1.6</TargetFramework>
+    <TargetFrameworks>netstandard1.6;net461</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Library.fs" />
+    <Compile Include="InfoProvider.fs" />
+    <Compile Include="Domains.fs" />
+    <Compile Include="TypeMapping.fs" />
+    <Compile Include="Serialization.fs" />
+    <Compile Include="Endpoints.fs" />
   </ItemGroup>
 
   <ItemGroup>
