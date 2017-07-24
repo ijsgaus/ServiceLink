@@ -27,6 +27,25 @@ namespace MicroService1
         
         static void Main(string[] args)
         {
+            var ruleManager = new RuleManager<ICommandSource>();
+            Bus<ICommandSource>
+                .Configure(ruleManager)
+                .Sample.PublishAsync(new SampleEvent());
+
+            Bus<ICommandSource>
+                .Configure(ruleManager)
+                .Sample.Publish(new SampleEvent());
+            Bus<ICommandSource>
+                .Configure(ruleManager)
+                .Sample.Deliver(store, new SampleEvent()).Only();
+
+            Bus<ICommandSource>
+                .Configure(ruleManager)
+                .Sample.Deliver(store, new SampleEvent()).After.Using<ISecondStore>(ss => ss.MarkAnsweredMail());
+
+
+            Service<ICommandSource>(ruleManager).Event(p => p.Sample);
+            
             var t = new Test<ICommandSource>();
         
         }
