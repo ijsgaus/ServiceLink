@@ -19,27 +19,27 @@ namespace ServiceLink
             return GuardedEquals(other);
         }
 
-        public TR Match<TR>(Func<T, TR> success, Func<Exception, TR> error)
+        public TR Match<TR>(Func<T, TR> onOk, Func<Exception, TR> onFail)
         {
             switch (this)
             {
-                case Error er:
-                    return error(er.Value);
-                case Success s:
-                    return success(s.Value);
+                case Fail er:
+                    return onFail(er.Value);
+                case Ok s:
+                    return onOk(s.Value);
             }
             throw new InvalidOperationException($"Unknown result type {GetType()}");
         }
 
-        public void Match(Action<T> success, Action<Exception> error)
+        public void Match(Action<T> onOk, Action<Exception> onFail)
         {
             switch (this)
             {
-                case Error er:
-                    error(er.Value);
+                case Fail er:
+                    onFail(er.Value);
                     return;
-                case Success s:
-                    success(s.Value);
+                case Ok s:
+                    onOk(s.Value);
                     return;
             }
             throw new InvalidOperationException($"Unknown result type {GetType()}");
@@ -49,10 +49,10 @@ namespace ServiceLink
         {
             switch (other)
             {
-                case Success s:
-                    return this is Success ts && Equals(s.Value, ts.Value);
-                case Error e:
-                    return this is Error te && Equals(e.Value, te.Value);
+                case Ok s:
+                    return this is Ok ts && Equals(s.Value, ts.Value);
+                case Fail e:
+                    return this is Fail te && Equals(e.Value, te.Value);
                 default:
                     throw new InvalidOperationException("Unknown result subtype detected {other.GetType()}");
             }
@@ -68,9 +68,9 @@ namespace ServiceLink
 
         public override int GetHashCode()
         {
-            return GetType().GetHashCode() * 29 + (this is Success s
+            return GetType().GetHashCode() * 29 + (this is Ok s
                        ? s.Value?.GetHashCode() ?? 0
-                       : ((Error) this).Value.GetHashCode());
+                       : ((Fail) this).Value.GetHashCode());
         }
 
         public static bool operator ==(Result<T> left, Result<T> right)
@@ -83,9 +83,9 @@ namespace ServiceLink
             return !Equals(left, right);
         }
 
-        public sealed class Success : Result<T>
+        public sealed class Ok : Result<T>
         {
-            public Success(T value)
+            public Ok(T value)
             {
                 Value = value;
             }
@@ -94,13 +94,13 @@ namespace ServiceLink
 
             public override string ToString()
             {
-                return $"{nameof(Success)}({Value})";
+                return $"{nameof(Ok)}({Value})";
             }
         }
 
-        public sealed class Error : Result<T>
+        public sealed class Fail : Result<T>
         {
-            public Error([NotNull] Exception error)
+            public Fail([NotNull] Exception error)
             {
                 Value = error ?? throw new ArgumentNullException(nameof(error));
             }
@@ -110,21 +110,27 @@ namespace ServiceLink
 
             public override string ToString()
             {
-                return $"{nameof(Error)}({Value})";
+                return $"{nameof(Fail)}({Value})";
             }
         }
+
+
+        public static implicit operator Result<T>(Exception ex) => ex.ToFail<T>();
+        public static implicit operator Result<T>(T value) => value.ToOk();
+        
     }
 
+    
     public static class Result
     {
-        public static Result<T> ToSuccess<T>(this T value)
+        public static Result<T> ToOk<T>(this T value)
         {
-            return new Result<T>.Success(value);
+            return new Result<T>.Ok(value);
         }
 
-        public static Result<T> ToError<T>(this Exception error)
+        public static Result<T> ToFail<T>(this Exception error)
         {
-            return new Result<T>.Error(error);
+            return new Result<T>.Fail(error);
         }
 
 
@@ -132,7 +138,7 @@ namespace ServiceLink
         public static Result<TResult> Select<TSource, TResult>(this Result<TSource> result,
             Func<TSource, TResult> mapper)
         {
-            return result.Match(s => Try(s, mapper), e => e.ToError<TResult>());
+            return result.Match(s => Try(s, mapper), e => e.ToFail<TResult>());
         }
 
 
@@ -141,26 +147,26 @@ namespace ServiceLink
             Func<TSource, Result<TSelector>> selector,
             Func<TSource, TSelector, TResult> resultSelector)
         {
-            if (result is Result<TSource>.Success s)
+            if (result is Result<TSource>.Ok s)
                 try
                 {
                     var r1 = selector(s.Value);
-                    if (r1 is Result<TSelector>.Success s1)
+                    if (r1 is Result<TSelector>.Ok s1)
                         try
                         {
-                            return resultSelector(s.Value, s1.Value).ToSuccess();
+                            return resultSelector(s.Value, s1.Value).ToOk();
                         }
                         catch (Exception ex1)
                         {
-                            return ex1.ToError<TResult>();
+                            return ex1.ToFail<TResult>();
                         }
-                    return ((Result<TSelector>.Error) r1).Value.ToError<TResult>();
+                    return ((Result<TSelector>.Fail) r1).Value.ToFail<TResult>();
                 }
                 catch (Exception ex)
                 {
-                    return ex.ToError<TResult>();
+                    return ex.ToFail<TResult>();
                 }
-            return ((Result<TSource>.Error) result).Value.ToError<TResult>();
+            return ((Result<TSource>.Fail) result).Value.ToFail<TResult>();
         }
 
         [Pure]
@@ -173,13 +179,13 @@ namespace ServiceLink
         [Pure]
         public static Result<T> Wrap<T>(T val)
         {
-            return new Result<T>.Success(val);
+            return new Result<T>.Ok(val);
         }
 
         [Pure]
         public static Result<T> WrapError<T>([NotNull] Exception ex)
         {
-            return new Result<T>.Error(ex);
+            return new Result<T>.Fail(ex);
         }
 
         [Pure]
@@ -187,11 +193,11 @@ namespace ServiceLink
         {
             try
             {
-                return op().ToSuccess();
+                return op().ToOk();
             }
             catch (Exception ex)
             {
-                return ex.ToError<T>();
+                return ex.ToFail<T>();
             }
         }
 
@@ -204,7 +210,7 @@ namespace ServiceLink
             }
             catch (Exception ex)
             {
-                return ex.ToError<T>();
+                return ex.ToFail<T>();
             }
         }
 
@@ -251,33 +257,33 @@ namespace ServiceLink
         public static Result<T> Correct<T, TE>(this Result<T> result, Func<TE, T> func)
             where TE : Exception
         {
-            return result is Result<T>.Error err && err.Value is TE tex ? Try(() => func(tex)) : result;
+            return result is Result<T>.Fail err && err.Value is TE tex ? Try(() => func(tex)) : result;
         }
 
         [Pure]
         public static Result<T> MapError<T, TE>(this Result<T> result, Func<TE, Exception> func)
             where TE : Exception
         {
-            return result is Result<T>.Error err && err.Value is TE tex ? Try(() => func(tex).ToError<T>()) : result;
+            return result is Result<T>.Fail err && err.Value is TE tex ? Try(() => func(tex).ToFail<T>()) : result;
         }
 
         [Pure]
         public static Result<T> MapOrCorrect<T, TE>(this Result<T> result, Func<TE, Result<T>> func)
             where TE : Exception
         {
-            return result is Result<T>.Error err && err.Value is TE tex ? Try(() => func(tex)) : result;
+            return result is Result<T>.Fail err && err.Value is TE tex ? Try(() => func(tex)) : result;
         }
 
         [Pure]
         public static Result<T> OrElse<T>(Result<T> result, Func<Result<T>> alternative)
         {
-            return result is Result<T>.Error ? Try(alternative) : result;
+            return result is Result<T>.Fail ? Try(alternative) : result;
         }
 
         [Pure]
         public static Result<T> OrElse<T>(Result<T> result, Func<T> alternative)
         {
-            return result is Result<T>.Error ? Try(alternative) : result;
+            return result is Result<T>.Fail ? Try(alternative) : result;
         }
 
         [Pure]

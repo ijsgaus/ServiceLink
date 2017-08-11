@@ -38,14 +38,14 @@ namespace ServiceLink
         public static void WriteResult<T>(JsonWriter writer, Result<T> result, JsonSerializer serializer)
         {
             var (successName, errorName) = PropertyNames<T>(serializer);
-            if (result is Result<T>.Success ok)
+            if (result is Result<T>.Ok ok)
             {
                 writer.WriteStartObject();
                 writer.WritePropertyName(successName);
                 serializer.Serialize(writer, ok.Value);
                 writer.WriteEndObject();
             }
-            else if (result is Result<T>.Error er)
+            else if (result is Result<T>.Fail er)
             {
                 writer.WriteStartObject();
                 writer.WritePropertyName(errorName);
@@ -74,12 +74,12 @@ namespace ServiceLink
             if (propName == successName)
             {
                 var val = serializer.Deserialize<T>(reader);
-                result = val.ToSuccess();
+                result = val.ToOk();
             }
             else if (propName == errorName)
             {
                 var err = serializer.Deserialize<SerializedException>(reader);
-                result = err.ToError<T>();
+                result = err.ToFail<T>();
             }
             else
             {
@@ -92,8 +92,8 @@ namespace ServiceLink
         private static (string successName, string errorName) PropertyNames<T>(JsonSerializer serializer)
         {
             var namingStrategy = (serializer.ContractResolver as DefaultContractResolver)?.NamingStrategy;
-            const string successName = nameof(Result<T>.Success);
-            const string errorName = nameof(Result<T>.Error);
+            const string successName = nameof(Result<T>.Ok);
+            const string errorName = nameof(Result<T>.Fail);
             return namingStrategy == null
                 ? (successName, errorName)
                 : (namingStrategy.GetPropertyName(successName, false), namingStrategy.GetPropertyName(errorName,
