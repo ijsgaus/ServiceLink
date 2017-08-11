@@ -1,0 +1,440 @@
+{
+  "name": "sample.service",
+  "version": "0.5",
+  "endpoints": {
+    "awesome.event": {
+      "$type": "event",
+      "event": {
+        "$type": "object",
+        "typeReference": "SampleEvent",
+        "title": "SampleEvent"
+      },
+      "owner": {
+        "$id": "1",
+        "name": "sample.service",
+        "version": "0.5",
+        "endpoints": {
+          "awesome.event": {
+            "$type": "event",
+            "event": {
+              "$type": "object",
+              "typeReference": "SampleEvent",
+              "title": "SampleEvent"
+            },
+            "owner": {
+              "$ref": "1"
+            },
+            "title": "AwesomeEvent",
+            "X-RabbitMq": {
+              "exchangeIn": "topic.exchange",
+              "exchangeInType": "Fanout"
+            }
+          },
+          "order.change": {
+            "$type": "command",
+            "command": {
+              "$type": "object",
+              "typeReference": "SampleCommand",
+              "title": "SampleCommand"
+            },
+            "owner": {
+              "$ref": "1"
+            },
+            "title": "OrderChange",
+            "X-RabbitMq": {
+              "routingKey": "special.routing.key"
+            }
+          },
+          "an.array": {
+            "$type": "event",
+            "event": {
+              "$type": "array",
+              "element": {
+                "$type": "wellKnown",
+                "code": "i32",
+                "title": "Int32"
+              },
+              "title": "Int32[]"
+            },
+            "owner": {
+              "$ref": "1"
+            },
+            "title": "AnArray"
+          },
+          "convert": {
+            "$type": "callable",
+            "request": {
+              "$type": "wellKnown",
+              "code": "i32",
+              "title": "Int32"
+            },
+            "response": {
+              "$type": "wellKnown",
+              "code": "string",
+              "title": "String"
+            },
+            "owner": {
+              "$ref": "1"
+            },
+            "title": "Convert"
+          }
+        },
+        "contracts": {
+          "$schema": "http://json-schema.org/draft-04/schema#",
+          "title": "Container",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "SampleEvent",
+            "SampleCommand"
+          ],
+          "properties": {
+            "SampleEvent": {
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/SampleEvent"
+                }
+              ]
+            },
+            "SampleCommand": {
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/SampleCommand"
+                }
+              ]
+            }
+          },
+          "definitions": {
+            "SampleEvent": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "Id": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "Name": {
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "Order": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/definitions/SampleEnum"
+                    }
+                  ]
+                }
+              },
+              "X-ContractName": "sample.event",
+              "X-ContractVersion": "0.5"
+            },
+            "SampleEnum": {
+              "type": "integer",
+              "description": "",
+              "x-enumNames": [
+                "First",
+                "Second",
+                "Third"
+              ],
+              "enum": [
+                0,
+                1,
+                2
+              ]
+            },
+            "SampleEvent2": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "IsGood": {
+                  "type": "boolean"
+                }
+              },
+              "allOf": [
+                {
+                  "$ref": "#/definitions/SampleEvent"
+                }
+              ],
+              "X-ContractName": "sample.event2",
+              "X-ContractVersion": "0.5"
+            },
+            "SampleCommand": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "OrderId": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "Operation": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/definitions/Operation"
+                    }
+                  ]
+                },
+                "Good": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/definitions/Good"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "Sample": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/definitions/SampleEnum"
+                    }
+                  ]
+                }
+              },
+              "X-ContractName": "sample.command",
+              "X-ContractVersion": "0.5"
+            },
+            "Operation": {
+              "type": "integer",
+              "description": "",
+              "x-enumNames": [
+                "Add",
+                "Remove"
+              ],
+              "enum": [
+                0,
+                1
+              ]
+            },
+            "Good": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "GoodId": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "GoodName": {
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "title": "ISampleService",
+        "X-RabbitMq": {
+          "exchangeInType": "Topic"
+        }
+      },
+      "title": "AwesomeEvent",
+      "X-RabbitMq": {
+        "exchangeIn": "topic.exchange",
+        "exchangeInType": "Fanout"
+      }
+    },
+    "order.change": {
+      "$type": "command",
+      "command": {
+        "$type": "object",
+        "typeReference": "SampleCommand",
+        "title": "SampleCommand"
+      },
+      "owner": {
+        "$ref": "1"
+      },
+      "title": "OrderChange",
+      "X-RabbitMq": {
+        "routingKey": "special.routing.key"
+      }
+    },
+    "an.array": {
+      "$type": "event",
+      "event": {
+        "$type": "array",
+        "element": {
+          "$type": "wellKnown",
+          "code": "i32",
+          "title": "Int32"
+        },
+        "title": "Int32[]"
+      },
+      "owner": {
+        "$ref": "1"
+      },
+      "title": "AnArray"
+    },
+    "convert": {
+      "$type": "callable",
+      "request": {
+        "$type": "wellKnown",
+        "code": "i32",
+        "title": "Int32"
+      },
+      "response": {
+        "$type": "wellKnown",
+        "code": "string",
+        "title": "String"
+      },
+      "owner": {
+        "$ref": "1"
+      },
+      "title": "Convert"
+    }
+  },
+  "contracts": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "Container",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "SampleEvent",
+      "SampleCommand"
+    ],
+    "properties": {
+      "SampleEvent": {
+        "oneOf": [
+          {
+            "$ref": "#/definitions/SampleEvent"
+          }
+        ]
+      },
+      "SampleCommand": {
+        "oneOf": [
+          {
+            "$ref": "#/definitions/SampleCommand"
+          }
+        ]
+      }
+    },
+    "definitions": {
+      "SampleEvent": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "Order": {
+            "oneOf": [
+              {
+                "$ref": "#/definitions/SampleEnum"
+              }
+            ]
+          }
+        },
+        "X-ContractName": "sample.event",
+        "X-ContractVersion": "0.5"
+      },
+      "SampleEnum": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "First",
+          "Second",
+          "Third"
+        ],
+        "enum": [
+          0,
+          1,
+          2
+        ]
+      },
+      "SampleEvent2": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "IsGood": {
+            "type": "boolean"
+          }
+        },
+        "allOf": [
+          {
+            "$ref": "#/definitions/SampleEvent"
+          }
+        ],
+        "X-ContractName": "sample.event2",
+        "X-ContractVersion": "0.5"
+      },
+      "SampleCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "OrderId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Operation": {
+            "oneOf": [
+              {
+                "$ref": "#/definitions/Operation"
+              }
+            ]
+          },
+          "Good": {
+            "oneOf": [
+              {
+                "$ref": "#/definitions/Good"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "Sample": {
+            "oneOf": [
+              {
+                "$ref": "#/definitions/SampleEnum"
+              }
+            ]
+          }
+        },
+        "X-ContractName": "sample.command",
+        "X-ContractVersion": "0.5"
+      },
+      "Operation": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Add",
+          "Remove"
+        ],
+        "enum": [
+          0,
+          1
+        ]
+      },
+      "Good": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "GoodId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "GoodName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "title": "ISampleService",
+  "X-RabbitMq": {
+    "exchangeInType": "Topic"
+  }
+}
