@@ -13,9 +13,5 @@
       <Project>{b4812568-273e-44bf-803c-23360d759184}</Project>
       <Name>ServiceLink</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Contracts\Contracts.csproj">
-      <Project>{be7f1322-ab70-4dc1-9e2b-fb1a992b5e67}</Project>
-      <Name>Contracts</Name>
-    </ProjectReference>
   </ItemGroup>
 </Project>

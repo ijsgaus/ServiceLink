@@ -12,9 +12,5 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ServiceLink.RabbitMq.Markers\ServiceLink.RabbitMq.Markers.csproj" />
-    <ProjectReference Include="..\ServiceLink\ServiceLink.csproj">
-      <Project>{b4812568-273e-44bf-803c-23360d759184}</Project>
-      <Name>ServiceLink</Name>
-    </ProjectReference>
   </ItemGroup>
 </Project>
