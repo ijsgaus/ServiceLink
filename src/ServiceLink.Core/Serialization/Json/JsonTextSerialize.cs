@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using System.Net.Mime;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace ServiceLink.Serialization.Json
 {
@@ -14,7 +16,8 @@ namespace ServiceLink.Serialization.Json
         public Serialized<string> Serialize(string typeCode, object obj)
         {
             var json = JsonConvert.SerializeObject(obj, _settings);
-            return new Serialized<string>(typeCode, "text/json", json);
+            var contentType = new ContentType("text/json");
+            return new Serialized<string>(typeCode,  contentType, json);
         }
     }
 }

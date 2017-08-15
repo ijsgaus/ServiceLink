@@ -1,16 +1,18 @@
-﻿namespace ServiceLink.Serialization
+﻿using System.Net.Mime;
+
+namespace ServiceLink.Serialization
 {
     public class Serialized<TFormat>
     {
-        public Serialized(string typeCode, string encoding, TFormat data)
+        public Serialized(string typeCode, ContentType contentType, TFormat data)
         {
             TypeCode = typeCode;
-            Encoding = encoding;
+            ContentType = contentType;
             Data = data;
         }
 
         public string TypeCode { get; }
-        public string Encoding { get; }
+        public ContentType ContentType { get; }
         public TFormat Data { get; }
     }
 }

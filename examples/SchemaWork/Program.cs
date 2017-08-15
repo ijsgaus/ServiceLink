@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
+using Newtonsoft.Json;
 using SampleServices;
 using ServiceLink.Schema;
 using ServiceLink.Schema.CSharp;
 using ServiceLink.Schema.Generation;
 using ServiceLink.Schema.RabbitMq;
+using ServiceLink.Serialization;
+using ServiceLink.Serialization.Json;
 
 namespace SchemaWork
 {
@@ -40,6 +44,16 @@ namespace SchemaWork
 
             var json = schema.ToString();
             var obj = ServiceSchema.FromString(json);
+            var sampleEvent = new SampleEvent
+            {
+                Id = 1,
+                Name = "132456",
+                Order = SampleEnum.First
+            };
+            var serialize = new JsonTextSerialize(new JsonSerializerSettings());
+            var serialized = serialize.Serialize("test", sampleEvent);
+            var mapper = new StringMapper(Encoding.UTF8);
+            var raw = mapper.Map(serialized);
 
             var generator = new SchemaGenerator<ISampleService>();
             schema = generator.Generate(new SchemaGenerationOptions(new RabbitSchemaGenerator()));
@@ -60,7 +74,9 @@ namespace SchemaWork
             var csharp = csgenerator.GenerateContracts();
             //File.WriteAllText("sample.cs", csharp);
             var cintf = csgenerator.GenerateInterface();
-            File.WriteAllText("sample.cs", csharp + "\n" + cintf);
+            File.WriteAllText("sample.cs-gen", csharp + "\n" + cintf);
+
+
             Console.ReadKey();
         }
     }

@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System.Net.Mime;
+using System.Runtime.InteropServices;
+using System.Text;
 using Newtonsoft.Json;
 
 namespace ServiceLink.Serialization.Json
@@ -16,7 +18,8 @@ namespace ServiceLink.Serialization.Json
         {
             var text = JsonConvert.SerializeObject(obj, _settings);
             var bytes = Encoding.UTF8.GetBytes(text);
-            return new Serialized<byte[]>(typeCode, "text/json;encoding=utf8", bytes);
+            var contentType = new ContentType("text/json") { CharSet = Encoding.UTF8.WebName };
+            return new Serialized<byte[]>(typeCode, contentType, bytes);
         }
     }
 }
