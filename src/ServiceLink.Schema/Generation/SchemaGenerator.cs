@@ -17,7 +17,7 @@ namespace ServiceLink.Schema.Generation
 
         public SchemaGenerator()
         {
-            if(!typeof(T).GetTypeInfo().IsInterface) throw new ArgumentException($"Shema type must be interface");
+            if(!typeof(T).GetTypeInfo().IsInterface) throw new ArgumentException($"Schema type must be interface");
             
             
             _serviceTypeInfo = typeof(T).GetTypeInfo();

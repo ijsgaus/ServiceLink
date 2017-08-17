@@ -8,7 +8,7 @@ namespace ServiceLink
 {
     public static partial class Extensions
     {
-        public static T Unwrap<T>(this Option<T> option, Func<Option<T>, string> onError)
+        private static T Unwrap<T>(this Option<T> option, Func<Option<T>, string> onError)
         {
             return option.Match(p => p, () => throw new InvalidOperationException(onError(option)));
         }

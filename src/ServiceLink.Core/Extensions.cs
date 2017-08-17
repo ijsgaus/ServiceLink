@@ -149,10 +149,10 @@ namespace ServiceLink
             {
                 if(first && stripFirstI && letter == 'I')
                     continue;
-                if (Char.IsUpper(letter))
+                if (char.IsUpper(letter))
                 {
                     if (!first) builder.Append('.');
-                    builder.Append(Char.ToLower(letter));
+                    builder.Append(char.ToLower(letter));
                 }
                 else
                     builder.Append(letter);
